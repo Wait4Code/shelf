@@ -1,26 +1,42 @@
 import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import {Box, Container, Fab} from '@mui/material';
+import DocumentScannerIcon from '@mui/icons-material/DocumentScanner';
+import {BookList} from './components/BookList';
+import {BarcodeScanner} from './components/BarcodeScanner';
 
-function App() {
-  return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+
+const useStyles = {
+    rotateIcon: {
+        transform: 'rotate(90deg)'
+    }
 }
+
+const App: React.FC = () => {
+    const [isScanning, setIsScanning] = React.useState(false);
+
+    const handleScanClick = () => {
+        setIsScanning(true);
+    };
+
+    return (
+        <Container>
+            <Box my={4}>
+                <h1>Ma Bibliothèque</h1>
+                <BookList/>
+            </Box>
+            {isScanning && (
+                <BarcodeScanner onClose={() => setIsScanning(false)}/>
+            )}
+            <Fab
+                color="primary"
+                aria-label="add"
+                style={{position: 'fixed', bottom: 16, right: 16}}
+                onClick={handleScanClick}
+            >
+                <DocumentScannerIcon sx={useStyles.rotateIcon}/>
+            </Fab>
+        </Container>
+    );
+};
 
 export default App;
