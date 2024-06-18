@@ -1,0 +1,15 @@
+{
+  "dev": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-shelf-dev-bcd79-authRole",
+      "UnauthRoleArn": "arn:aws:iam::339713028553:role/amplify-shelf-dev-bcd79-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::339713028553:role/amplify-shelf-dev-bcd79-authRole",
+      "Region": "eu-west-3",
+      "DeploymentBucketName": "amplify-shelf-dev-bcd79-deployment",
+      "UnauthRoleName": "amplify-shelf-dev-bcd79-unauthRole",
+      "StackName": "amplify-shelf-dev-bcd79",
+      "StackId": "arn:aws:cloudformation:eu-west-3:339713028553:stack/amplify-shelf-dev-bcd79/35c13180-2d4d-11ef-a5cb-0ed98f401651",
+      "AmplifyAppId": "d6xsivi8e2y3t"
+    }
+  }
+}
