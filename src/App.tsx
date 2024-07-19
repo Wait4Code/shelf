@@ -4,7 +4,6 @@ import DocumentScannerIcon from '@mui/icons-material/DocumentScanner';
 import {BookList} from './components/BookList';
 import {BarcodeScanner} from './components/BarcodeScanner';
 
-
 const useStyles = {
     rotateIcon: {
         transform: 'rotate(90deg)'
