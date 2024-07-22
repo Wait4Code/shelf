@@ -1,15 +1,19 @@
-import React, {CSSProperties, useEffect, useRef, useState} from 'react';
-import {Box, IconButton, Snackbar} from '@mui/material';
+// src/components/BarcodeScanner.tsx
+import React, {useEffect, useRef, useState} from 'react';
+import {Box, Button, IconButton, Snackbar} from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import {Html5Qrcode, Html5QrcodeScanner, Html5QrcodeScannerState, Html5QrcodeSupportedFormats} from 'html5-qrcode';
-import {Html5QrcodeScannerConfig} from "html5-qrcode/src/html5-qrcode-scanner";
-import {QrcodeSuccessCallback} from "html5-qrcode/src/core";
+import {
+    Html5Qrcode,
+    Html5QrcodeScanner,
+    Html5QrcodeScannerState,
+    Html5QrcodeSupportedFormats,
+    QrcodeSuccessCallback
+} from 'html5-qrcode';
+import {useBarcodeStore} from '../stores/barcodeStore';
+import {Html5QrcodeScannerConfig} from "html5-qrcode/html5-qrcode-scanner";
+import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 
-interface BarcodeScannerProps {
-    onClose: () => void;
-}
-
-const useStyles: { [k: string]: CSSProperties } = {
+const useStyles = {
     container: {
         position: 'fixed',
         top: 0,
@@ -28,25 +32,41 @@ const useStyles: { [k: string]: CSSProperties } = {
         color: '#fff',
         zIndex: 10000,
     },
-    captureFrame: {
+    scanner: {
         flexGrow: 1,
     },
-    snackbar: {
-        zIndex: 10002, // Ensure snackbar is on top
-    },
+    validationButton: {
+        position: 'fixed',
+        bottom: 16,
+        right: 16,
+        zIndex: 10000,
+    }
 };
 
+interface BarcodeScannerProps {
+    onClose: () => void;
+}
+
 export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({onClose}) => {
-    const [barcode, setBarcode] = useState<string | null>(null);
+    const hasBarcode = useBarcodeStore(state => state.has);
+    const addBarcode = useBarcodeStore(state => state.add);
+    const barcodes = useBarcodeStore(state => state.barcodes);
+    const [scanFeedback, setScanFeedback] = useState<string | null>(null);
     const scannerRef = useRef<Html5QrcodeScanner | null>(null);
     const html5QrcodeRef = useRef<Html5Qrcode | null>(null);
 
-    const onScanSuccess: QrcodeSuccessCallback = decodedText => {
-        setBarcode(decodedText);
-    };
-
     useEffect(() => {
+        const onScanSuccess: QrcodeSuccessCallback = decodedText => {
+            let message = `Code-barres scanné : ${decodedText}`;
+            if (hasBarcode(decodedText)) {
+                message += ' (déjà scanné !)';
+            }
+            addBarcode(decodedText);
+            setScanFeedback(message);
+        };
+
         const {innerWidth: viewWidth, innerHeight: viewHeight} = window;
+        // noinspection SpellCheckingInspection
         const config: Html5QrcodeScannerConfig = {
             fps: 10,
             qrbox: (viewfinderWidth, viewfinderHeight) => {
@@ -68,7 +88,7 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({onClose}) => {
                 html5QrcodeRef.current.stop().then(() => html5QrcodeRef.current?.clear());
             }
         };
-    }, []);
+    }, [addBarcode, hasBarcode]);
 
 
     return (
@@ -76,14 +96,23 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({onClose}) => {
             <IconButton sx={useStyles.closeButton} onClick={onClose}>
                 <CloseIcon/>
             </IconButton>
-            <div id="reader" style={useStyles.captureFrame}></div>
+            <div id="reader" style={useStyles.scanner}></div>
             <Snackbar
-                open={!!barcode}
-                message={barcode}
+                open={!!scanFeedback}
+                message={scanFeedback}
                 autoHideDuration={2000}
-                onClose={() => setBarcode(null)}
-                sx={useStyles.snackbar} // Ensure snackbar is on top
+                onClose={() => setScanFeedback(null)}
+                sx={barcodes.length ? {bottom: {xs: 90}} : {}}
             />
+            {barcodes.length > 0 &&
+                <Button
+                    sx={useStyles.validationButton}
+                    variant="contained"
+                    color="primary"
+                >
+                    {barcodes.length} code-barres <NavigateNextIcon/>
+                </Button>
+            }
         </Box>
     );
 };
