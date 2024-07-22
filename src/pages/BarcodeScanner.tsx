@@ -1,4 +1,4 @@
-// src/components/BarcodeScanner.tsx
+// src/pages/BarcodeScanner.tsx
 import React, {useEffect, useRef, useState} from 'react';
 import {Box, Button, IconButton, Snackbar} from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';

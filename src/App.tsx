@@ -1,8 +1,8 @@
 import React from 'react';
 import {Container} from '@mui/material';
-import {BarcodeScanner} from './components/BarcodeScanner';
+import {BarcodeScanner} from './pages/BarcodeScanner';
 import {BrowserRouter, Route, Routes} from "react-router-dom";
-import {Homepage} from "./components/Homepage";
+import {Homepage} from "./pages/Homepage";
 import {Routes as AppRoutes} from "./utils/routes";
 
 
