@@ -1,39 +1,21 @@
 import React from 'react';
-import {Box, Container, Fab} from '@mui/material';
-import DocumentScannerIcon from '@mui/icons-material/DocumentScanner';
-import {BookList} from './components/BookList';
+import {Container} from '@mui/material';
 import {BarcodeScanner} from './components/BarcodeScanner';
+import {BrowserRouter, Route, Routes} from "react-router-dom";
+import {Homepage} from "./components/Homepage";
+import {Routes as AppRoutes} from "./utils/routes";
 
-const useStyles = {
-    rotateIcon: {
-        transform: 'rotate(90deg)'
-    }
-}
 
 const App: React.FC = () => {
-    const [isScanning, setIsScanning] = React.useState(false);
-
-    const handleScanClick = () => {
-        setIsScanning(true);
-    };
-
     return (
         <Container>
-            <Box my={4}>
-                <h1>Ma Bibliothèque</h1>
-                <BookList/>
-            </Box>
-            {isScanning && (
-                <BarcodeScanner onClose={() => setIsScanning(false)}/>
-            )}
-            <Fab
-                color="primary"
-                aria-label="add"
-                style={{position: 'fixed', bottom: 16, right: 16}}
-                onClick={handleScanClick}
-            >
-                <DocumentScannerIcon sx={useStyles.rotateIcon}/>
-            </Fab>
+            <BrowserRouter>
+                <Routes>
+                    <Route path={AppRoutes.Homepage} Component={Homepage}/>
+                    <Route path={AppRoutes.Scan} Component={BarcodeScanner}/>
+                    {/*<Route path={AppRoutes.Validation}/>*/}
+                </Routes>
+            </BrowserRouter>
         </Container>
     );
 };

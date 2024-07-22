@@ -12,6 +12,8 @@ import {
 import {useBarcodeStore} from '../stores/barcodeStore';
 import {Html5QrcodeScannerConfig} from "html5-qrcode/html5-qrcode-scanner";
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
+import {useNavigate} from "react-router-dom";
+import {Routes} from "../utils/routes";
 
 const useStyles = {
     container: {
@@ -43,11 +45,8 @@ const useStyles = {
     }
 };
 
-interface BarcodeScannerProps {
-    onClose: () => void;
-}
-
-export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({onClose}) => {
+export const BarcodeScanner: React.FC = () => {
+    const navigate = useNavigate();
     const hasBarcode = useBarcodeStore(state => state.has);
     const addBarcode = useBarcodeStore(state => state.add);
     const barcodes = useBarcodeStore(state => state.barcodes);
@@ -93,7 +92,7 @@ export const BarcodeScanner: React.FC<BarcodeScannerProps> = ({onClose}) => {
 
     return (
         <Box sx={useStyles.container}>
-            <IconButton sx={useStyles.closeButton} onClick={onClose}>
+            <IconButton sx={useStyles.closeButton} onClick={() => navigate(Routes.Homepage)}>
                 <CloseIcon/>
             </IconButton>
             <div id="reader" style={useStyles.scanner}></div>
