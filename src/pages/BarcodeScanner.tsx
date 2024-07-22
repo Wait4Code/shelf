@@ -1,6 +1,6 @@
 // src/pages/BarcodeScanner.tsx
-import React, {useEffect, useRef, useState} from 'react';
-import {Box, Button, IconButton, Snackbar} from '@mui/material';
+import React, { useEffect, useRef, useState } from 'react';
+import { Box, Button, IconButton, Snackbar } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import {
     Html5Qrcode,
@@ -9,11 +9,11 @@ import {
     Html5QrcodeSupportedFormats,
     QrcodeSuccessCallback
 } from 'html5-qrcode';
-import {useBarcodeStore} from '../stores/barcodeStore';
-import {Html5QrcodeScannerConfig} from "html5-qrcode/html5-qrcode-scanner";
+import { useScanStore } from '../stores/scanStore';
+import { Html5QrcodeScannerConfig } from "html5-qrcode/html5-qrcode-scanner";
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
-import {useNavigate} from "react-router-dom";
-import {Routes} from "../utils/routes";
+import { useNavigate } from "react-router-dom";
+import { Routes } from "../utils/routes";
 
 const useStyles = {
     container: {
@@ -47,9 +47,10 @@ const useStyles = {
 
 export const BarcodeScanner: React.FC = () => {
     const navigate = useNavigate();
-    const hasBarcode = useBarcodeStore(state => state.has);
-    const addBarcode = useBarcodeStore(state => state.add);
-    const barcodes = useBarcodeStore(state => state.barcodes);
+    const getScanCount = useScanStore(state => state.count)
+    const hasAnyScan = useScanStore(state => state.hasAny);
+    const hasBarcode = useScanStore(state => state.hasBarcode);
+    const addBarcode = useScanStore(state => state.addBarcode);
     const [scanFeedback, setScanFeedback] = useState<string | null>(null);
     const scannerRef = useRef<Html5QrcodeScanner | null>(null);
     const html5QrcodeRef = useRef<Html5Qrcode | null>(null);
@@ -81,7 +82,6 @@ export const BarcodeScanner: React.FC = () => {
 
         html5QrcodeRef.current?.start({facingMode: "environment"}, config, onScanSuccess, undefined);
 
-
         return () => {
             if (html5QrcodeRef.current && [Html5QrcodeScannerState.PAUSED, Html5QrcodeScannerState.SCANNING].includes(html5QrcodeRef.current.getState())) {
                 html5QrcodeRef.current.stop().then(() => html5QrcodeRef.current?.clear());
@@ -89,11 +89,10 @@ export const BarcodeScanner: React.FC = () => {
         };
     }, [addBarcode, hasBarcode]);
 
-
     return (
         <Box sx={useStyles.container}>
             <IconButton sx={useStyles.closeButton} onClick={() => navigate(Routes.Homepage)}>
-                <CloseIcon/>
+                <CloseIcon />
             </IconButton>
             <div id="reader" style={useStyles.scanner}></div>
             <Snackbar
@@ -101,16 +100,16 @@ export const BarcodeScanner: React.FC = () => {
                 message={scanFeedback}
                 autoHideDuration={2000}
                 onClose={() => setScanFeedback(null)}
-                sx={barcodes.length ? {bottom: {xs: 90}} : {}}
+                sx={hasAnyScan() ? { bottom: { xs: 90 } } : {}}
             />
-            {barcodes.length > 0 &&
+            {hasAnyScan() &&
                 <Button
                     sx={useStyles.validationButton}
                     variant="contained"
                     color="primary"
-                    onClick={()=> navigate(Routes.Validation)}
+                    onClick={() => navigate(Routes.Validation)}
                 >
-                    {barcodes.length} code-barres <NavigateNextIcon/>
+                    {getScanCount()} code-barres <NavigateNextIcon />
                 </Button>
             }
         </Box>

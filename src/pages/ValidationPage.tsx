@@ -1,12 +1,14 @@
 // src/pages/ValidationPage.tsx
 import React from 'react';
-import {useBarcodeStore} from '../stores/barcodeStore';
-import {Box, Button, List, ListItem, ListItemText} from '@mui/material';
+import {SearchState, useScanStore} from '../stores/scanStore';
+import {Box, Button, CircularProgress, List, ListItem, ListItemText} from '@mui/material';
 import {useNavigate} from 'react-router-dom';
+import {map} from "lodash";
+
 
 export const ValidationPage: React.FC = () => {
-    const barcodes = useBarcodeStore(state => state.barcodes);
-    const clearBarcodes = useBarcodeStore(state => state.clear);
+    const scans = useScanStore(state => state.scans);
+    const clearBarcodes = useScanStore(state => state.clear);
     const navigate = useNavigate();
 
     const handleValidation = () => {
@@ -19,11 +21,16 @@ export const ValidationPage: React.FC = () => {
         <Box>
             <h2>Validation des Scans</h2>
             <List>
-                {barcodes.map(barcode => (
+                {map(scans, (scanSearch, barcode) =>
                     <ListItem key={barcode}>
-                        <ListItemText primary={barcode}/>
+                        <ListItemText
+                            primary={barcode}
+                            secondary={scanSearch.state === SearchState.Pending ?
+                                <CircularProgress size={20}/> : scanSearch.results[0]?.title || 'Erreur'}
+                        />
                     </ListItem>
-                ))}
+                )}
+
             </List>
             <Button variant="contained" color="primary" onClick={handleValidation}>
                 Valider
