@@ -108,6 +108,7 @@ export const BarcodeScanner: React.FC = () => {
                     sx={useStyles.validationButton}
                     variant="contained"
                     color="primary"
+                    onClick={()=> navigate(Routes.Validation)}
                 >
                     {barcodes.length} code-barres <NavigateNextIcon/>
                 </Button>
