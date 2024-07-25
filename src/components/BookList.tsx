@@ -4,13 +4,13 @@ import { BookItem } from './BookItem';
 import { List, ListItem } from '@mui/material';
 
 export const BookList: React.FC = () => {
-    const books = useBookStore(state => state.books);
+    const documents = useBookStore(state => state.documents);
 
     return (
         <List>
-            {books.map(book => (
-                <ListItem key={book.isbn}>
-                    <BookItem book={book} />
+            {documents.map(document => (
+                <ListItem key={document.isbn}>
+                    <BookItem document={document} />
                 </ListItem>
             ))}
         </List>

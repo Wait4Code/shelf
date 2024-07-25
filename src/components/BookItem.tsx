@@ -1,32 +1,32 @@
 import React from 'react';
-import { Book } from '../types/Book';
+import { LibraryDocument } from '../types/LibraryDocument';
 import { Card, CardContent, Typography, CardMedia } from '@mui/material';
 
 interface BookItemProps {
-    book: Book;
+    document: LibraryDocument;
 }
 
-export const BookItem: React.FC<BookItemProps> = ({ book }) => {
+export const BookItem: React.FC<BookItemProps> = ({ document }) => {
     return (
         <Card style={{ display: 'flex', marginBottom: 16 }}>
-            {book.cover && (
+            {document.coverImageUrl && (
                 <CardMedia
                     component="img"
                     style={{ width: 151 }}
-                    image={book.cover}
-                    alt={book.title}
+                    image={document.coverImageUrl}
+                    alt={document.title}
                 />
             )}
             <CardContent>
-                <Typography variant="h5">{book.title}</Typography>
-                <Typography variant="subtitle1" color="textSecondary">
-                    {book.authors.join(', ')}
+                <Typography variant="h5">{document.title}</Typography>
+                {/*<Typography variant="subtitle1" color="textSecondary">*/}
+                {/*    {document.authors.join(', ')}*/}
+                {/*</Typography>*/}
+                <Typography variant="body2" color="textSecondary">
+                    {document.publication?.publicationDate}
                 </Typography>
                 <Typography variant="body2" color="textSecondary">
-                    {book.publicationDate}
-                </Typography>
-                <Typography variant="body2" color="textSecondary">
-                    {book.publishers.join(', ')}
+                    {document.publication?.publisher}
                 </Typography>
             </CardContent>
         </Card>

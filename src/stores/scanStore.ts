@@ -1,7 +1,7 @@
 // src/stores/scanStore.ts
 import {create} from 'zustand';
-import {fetchBookDataFromGoogleBooks} from "../utils/bookUtils";
-import {Book} from "../types/Book";
+import {searchBNFDocument} from "../utils/libraryDocumentUtils";
+import {LibraryDocument} from "../types";
 
 
 export enum SearchState {
@@ -12,7 +12,7 @@ export enum SearchState {
 
 interface BarcodeSearch {
     state: SearchState;
-    results: Book[]
+    results: LibraryDocument[]
 }
 
 
@@ -36,11 +36,11 @@ export const useScanStore = create<ScanStore>((set, get) => ({
 
         set(state => ({scans: {...state.scans, [barcode]: {state: SearchState.Pending, results: []}}}));
         try {
-            const book = await fetchBookDataFromGoogleBooks(barcode);
-            if(!book){
+            const documents = await searchBNFDocument(barcode);
+            if(!documents){
                 set(state => ({scans: {...state.scans, [barcode]: {state: SearchState.Error, results: []}}}));
             }else{
-                set(state => ({scans: {...state.scans, [barcode]: {state: SearchState.Success, results: [book]}}}))
+                set(state => ({scans: {...state.scans, [barcode]: {state: SearchState.Success, results: documents}}}))
             }
         } catch (error) {
             set(state => ({scans: {...state.scans, [barcode]: {state: SearchState.Error, results: []}}}));

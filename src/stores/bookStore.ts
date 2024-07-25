@@ -1,31 +1,26 @@
 // src/stores/bookStore.ts
 import {create} from 'zustand'
 import {persist} from 'zustand/middleware'
-import {Book} from '../types/Book'
+import {LibraryDocument} from '../types'
 
 
-interface BookStore {
-    books: Book[]
-    addBook: (book: Book) => void
-    getBookByISBN: (isbn: string) => Book | undefined
-    isBookInStore: (isbn: string) => boolean
+
+interface DocumentStore {
+    documents: LibraryDocument[]
+    addDocument: (document: LibraryDocument) => void
 }
 
 export const useBookStore = create(
-    persist<BookStore>(
-        (set, get) => ({
-            books: [],
-            addBook: book =>
+    persist<DocumentStore>(
+        set => ({
+            documents: [],
+            addDocument: document =>
                 set(state => ({
-                    books: [...state.books, book],
+                    documents: [...state.documents, document],
                 })),
-            getBookByISBN: isbn =>
-                get().books.find(book => book.isbn === isbn),
-            isBookInStore: isbn =>
-                get().books.some(book => book.isbn === isbn),
         }),
         {
-            name: 'book-storage', // Nom de l'entrée dans le local storage
+            name: 'document-storage', // Nom de l'entrée dans le local storage
         }
     )
 )
