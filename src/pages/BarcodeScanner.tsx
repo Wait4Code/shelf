@@ -61,7 +61,7 @@ export const BarcodeScanner: React.FC = () => {
             if (hasBarcode(decodedText)) {
                 message += ' (déjà scanné !)';
             }
-            addBarcode(decodedText);
+            void addBarcode(decodedText);
             setScanFeedback(message);
         };
 

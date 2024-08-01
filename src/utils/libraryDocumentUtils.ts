@@ -24,7 +24,7 @@ function getSubFieldValue(dataField: DataFieldInterface, code: string, nullable 
         }
         throw new Error(`Unknown subField with code "${code}" for dataField with tag "${dataField["mxc:datafield"].tag}"`);
     }
-    let content = he.decode(subfield["mxc:subfield"].content);
+    const content = he.decode(subfield["mxc:subfield"].content);
 
     return type === 'string' ? content : parseInt(content, 10);
 }
