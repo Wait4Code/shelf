@@ -64,10 +64,10 @@ export class DataField implements DataFieldInterface {
         this["mxc:datafield"] = dataField["mxc:datafield"];
     }
 
-    getSubFieldValue( code: string): string;
-    getSubFieldValue<N extends boolean, T extends 'string' | 'number'>( code: string, nullable: N, type: T): N extends true ? (T extends 'string' ? string : number) | null : T extends 'string' ? string : number;
-    getSubFieldValue<N extends boolean>( code: string, nullable: N): N extends true ? string | null : string
-    getSubFieldValue( code: string, nullable = false, type = 'string'): string | number | null {
+    getSubFieldValue(code: string): string;
+    getSubFieldValue<N extends boolean, T extends 'string' | 'number'>(code: string, nullable: N, type: T): N extends true ? (T extends 'string' ? string : number) | null : T extends 'string' ? string : number;
+    getSubFieldValue<N extends boolean>(code: string, nullable: N): N extends true ? string | null : string
+    getSubFieldValue(code: string, nullable = false, type = 'string'): string | number | null {
         const subfield = this["mxc:datafield"].children.find(subField => subField["mxc:subfield"].code === code);
         if (!subfield) {
             if (nullable) {

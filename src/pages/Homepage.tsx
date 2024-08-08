@@ -26,7 +26,7 @@ export const Homepage: React.FC = () => {
                 color="primary"
                 aria-label="add"
                 style={{position: 'fixed', bottom: 16, right: 16}}
-                onClick={() => navigate(Routes.Scan)}
+                onClick={() => navigate(Routes.Search)}
             >
                 <DocumentScannerIcon sx={useStyles.rotateIcon}/>
             </Fab>

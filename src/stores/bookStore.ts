@@ -1,13 +1,13 @@
 // src/stores/bookStore.ts
 import {create} from 'zustand'
 import {persist} from 'zustand/middleware'
-import {LibraryDocument} from '../types'
+import {LibraryDocumentInterface} from '../types'
 
 
 
 interface DocumentStore {
-    documents: LibraryDocument[]
-    addDocument: (document: LibraryDocument) => void
+    documents: LibraryDocumentInterface[]
+    addDocument: (document: LibraryDocumentInterface) => void
 }
 
 export const useBookStore = create(

@@ -9,7 +9,7 @@ export const BookList: React.FC = () => {
     return (
         <List>
             {documents.map(document => (
-                <ListItem key={document.isbn}>
+                <ListItem key={document.getIdentifiers().join('_')}>
                     <BookItem document={document} />
                 </ListItem>
             ))}

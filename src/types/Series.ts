@@ -2,7 +2,7 @@
 export interface Series {
     recordNumber: string | null;
     title: string;
-    number: number;
+    number: number | null;
     issn: string | null;
     publicationDate: string | null;
 }

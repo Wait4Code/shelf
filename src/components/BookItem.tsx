@@ -1,9 +1,9 @@
 import React from 'react';
-import { LibraryDocument } from '../types/LibraryDocument';
+import { LibraryDocumentInterface } from '../types/LibraryDocumentInterface';
 import { Card, CardContent, Typography, CardMedia } from '@mui/material';
 
 interface BookItemProps {
-    document: LibraryDocument;
+    document: LibraryDocumentInterface;
 }
 
 export const BookItem: React.FC<BookItemProps> = ({ document }) => {

@@ -1,5 +1,5 @@
 export enum Routes {
     Homepage = '/',
-    Scan = '/scan',
+    Search = '/recherche',
     Validation = '/scan/validation'
 }

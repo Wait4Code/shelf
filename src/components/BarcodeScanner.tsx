@@ -1,7 +1,6 @@
 // src/pages/BarcodeScanner.tsx
-import React, { useEffect, useRef, useState } from 'react';
-import { Box, Button, IconButton, Snackbar } from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
+import React, {useEffect, useRef, useState} from 'react';
+import {Box, Fab, Snackbar} from '@mui/material';
 import {
     Html5Qrcode,
     Html5QrcodeScanner,
@@ -9,11 +8,11 @@ import {
     Html5QrcodeSupportedFormats,
     QrcodeSuccessCallback
 } from 'html5-qrcode';
-import { useScanStore } from '../stores/scanStore';
-import { Html5QrcodeScannerConfig } from "html5-qrcode/html5-qrcode-scanner";
-import NavigateNextIcon from '@mui/icons-material/NavigateNext';
-import { useNavigate } from "react-router-dom";
-import { Routes } from "../utils/routes";
+import {useSearchStore} from '../stores/searchStore';
+import {Html5QrcodeScannerConfig} from "html5-qrcode/html5-qrcode-scanner";
+import {useNavigate} from "react-router-dom";
+import {Routes} from "../utils/routes";
+import {NavigateNext} from "@mui/icons-material";
 
 const useStyles = {
     container: {
@@ -27,17 +26,10 @@ const useStyles = {
         alignItems: 'stretch',
         zIndex: 9999,
     },
-    closeButton: {
-        position: 'absolute',
-        top: 16,
-        right: 16,
-        color: '#fff',
-        zIndex: 10000,
-    },
     scanner: {
         flexGrow: 1,
     },
-    validationButton: {
+    managementButton: {
         position: 'fixed',
         bottom: 16,
         right: 16,
@@ -47,10 +39,7 @@ const useStyles = {
 
 export const BarcodeScanner: React.FC = () => {
     const navigate = useNavigate();
-    const getScanCount = useScanStore(state => state.count)
-    const hasAnyScan = useScanStore(state => state.hasAny);
-    const hasBarcode = useScanStore(state => state.hasBarcode);
-    const addBarcode = useScanStore(state => state.addBarcode);
+    const {research, hasIdentifier, count} = useSearchStore();
     const [scanFeedback, setScanFeedback] = useState<string | null>(null);
     const scannerRef = useRef<Html5QrcodeScanner | null>(null);
     const html5QrcodeRef = useRef<Html5Qrcode | null>(null);
@@ -58,10 +47,10 @@ export const BarcodeScanner: React.FC = () => {
     useEffect(() => {
         const onScanSuccess: QrcodeSuccessCallback = decodedText => {
             let message = `Code-barres scanné : ${decodedText}`;
-            if (hasBarcode(decodedText)) {
+            if (hasIdentifier(decodedText)) {
                 message += ' (déjà scanné !)';
             }
-            void addBarcode(decodedText);
+            void research(decodedText);
             setScanFeedback(message);
         };
 
@@ -87,30 +76,26 @@ export const BarcodeScanner: React.FC = () => {
                 html5QrcodeRef.current.stop().then(() => html5QrcodeRef.current?.clear());
             }
         };
-    }, [addBarcode, hasBarcode]);
+    }, [research, hasIdentifier]);
 
     return (
         <Box sx={useStyles.container}>
-            <IconButton sx={useStyles.closeButton} onClick={() => navigate(Routes.Homepage)}>
-                <CloseIcon />
-            </IconButton>
             <div id="reader" style={useStyles.scanner}></div>
             <Snackbar
                 open={!!scanFeedback}
                 message={scanFeedback}
                 autoHideDuration={2000}
                 onClose={() => setScanFeedback(null)}
-                sx={hasAnyScan() ? { bottom: { xs: 90 } } : {}}
+                sx={count() > 0 ? {bottom: {xs: 90}} : {}}
             />
-            {hasAnyScan() &&
-                <Button
-                    sx={useStyles.validationButton}
-                    variant="contained"
+            {count() > 0 &&
+                <Fab
+                    sx={useStyles.managementButton}
                     color="primary"
                     onClick={() => navigate(Routes.Validation)}
                 >
-                    {getScanCount()} code-barres <NavigateNextIcon />
-                </Button>
+                    <NavigateNext fontSize="large"/>
+                </Fab>
             }
         </Box>
     );

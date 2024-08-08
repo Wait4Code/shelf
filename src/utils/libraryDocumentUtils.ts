@@ -3,15 +3,17 @@ import {convertXML} from 'simple-xml-to-json';
 import {
     Blurb,
     Collection,
-    Contributor,
     DeweyClassification,
+    Ean,
     LibraryDocument,
+    LibraryDocumentInterface,
     Publication,
     Series,
     Subject
 } from '../types';
 import {BNFResponse, DataFieldInterface, RecordDatum} from "../types/BnfSchema";
 import he from 'he';
+import {has} from "lodash";
 
 function getSubFieldValue(dataField: DataFieldInterface, code: string): string;
 function getSubFieldValue<N extends boolean, T extends 'string' | 'number'>(dataField: DataFieldInterface, code: string, nullable: N, type: T): N extends true ? (T extends 'string' ? string : number) | null : T extends 'string' ? string : number;
@@ -31,7 +33,7 @@ function getSubFieldValue(dataField: DataFieldInterface, code: string, nullable 
 
 
 // Fonction pour interroger l'API BNF SRU et parser le résultat XML en une liste de LibraryDocuments
-export const searchBNFDocument = async (query: string): Promise<LibraryDocument[]> => {
+export const searchBNFDocument = async (query: string): Promise<LibraryDocumentInterface[]> => {
     const bnfApiUrl = new URL("https://catalogue.bnf.fr/api/SRU")
     bnfApiUrl.searchParams.set("version", "1.2");
     bnfApiUrl.searchParams.set("operation", "searchRetrieve");
@@ -42,22 +44,33 @@ export const searchBNFDocument = async (query: string): Promise<LibraryDocument[
     const response = await axios.get(`https://corsproxy.io/?${encodeURIComponent(bnfApiUrl.toString())}`);
 
     const result = convertXML(response.data) as BNFResponse;
-    const records = result["srw:searchRetrieveResponse"].children[3]["srw:records"].children;
+    const records = result["srw:searchRetrieveResponse"].children[3]["srw:records"].children ?? [];
 
-    return records.map((record): LibraryDocument => {
+    const documents: LibraryDocumentInterface[] = [];
+    records.forEach(record => {
+        if (!has(record, 'srw:record.children[2].srw:recordData.children[0].mxc:record')) {
+            return;
+        }
+
         const recordDatum = new RecordDatum(record["srw:record"].children[2]["srw:recordData"].children[0]);
         const dataFields = recordDatum.getDataFields();
 
-        const contributors: Contributor[] = dataFields
-            .filter(dataField => dataField["mxc:datafield"].tag.startsWith('7'))
-            .map((dataField): Contributor => ({
-                lastName: dataField.getSubFieldValue('a'),
-                firstName: getSubFieldValue(dataField, 'b', true),
-                role: getSubFieldValue(dataField, '4', true),
-                identifier: getSubFieldValue(dataField, 'o', true)
-            }));
+        const document = new LibraryDocument(recordDatum.findDataField(dataField => dataField['mxc:datafield'].tag === '200')?.getSubFieldValue('a') as string);
 
-        const subjects: Subject[] = dataFields
+        dataFields.filter(dataField => dataField["mxc:datafield"].tag.startsWith('7'))
+            .forEach(dataField => {
+                try {
+                    document.contributors.push({
+                        lastName: dataField.getSubFieldValue('a'),
+                        firstName: getSubFieldValue(dataField, 'b', true),
+                        role: getSubFieldValue(dataField, '4', true),
+                        identifier: getSubFieldValue(dataField, 'o', true)
+                    });
+                } catch (e) {
+                }
+            });
+
+        document.subjects = dataFields
             .filter(dataField => dataField["mxc:datafield"].tag === "606")
             .map((dataField): Subject => ({
                 title: getSubFieldValue(dataField, 'a'),
@@ -66,7 +79,7 @@ export const searchBNFDocument = async (query: string): Promise<LibraryDocument[
             }));
 
 
-        const deweyClassifications: DeweyClassification[] = dataFields
+        document.deweyClassifications = dataFields
             .filter(dataField => dataField["mxc:datafield"].tag === "676")
             .map((dataField): DeweyClassification => ({
                 index: getSubFieldValue(dataField, 'a'),
@@ -74,23 +87,23 @@ export const searchBNFDocument = async (query: string): Promise<LibraryDocument[
             }));
 
 
-        let publication: Publication | null = dataFields
+        document.publication = dataFields
             .filter(dataField => (dataField["mxc:datafield"].tag === "214" && dataField['mxc:datafield'].ind2 === '0'))
             .map((dataField): Publication => ({
                 publisher: getSubFieldValue(dataField, 'c', true),
-                publicationDate: getSubFieldValue(dataField, 'd')
+                publicationDate: getSubFieldValue(dataField, 'd', true)
             })).pop() ?? null;
 
-        if (!publication) {
-            publication = dataFields
+        if (!document.publication) {
+            document.publication = dataFields
                 .filter(dataField => dataField["mxc:datafield"].tag === "210")
                 .map((dataField): Publication => ({
                     publisher: getSubFieldValue(dataField, 'c', true),
-                    publicationDate: getSubFieldValue(dataField, 'd')
+                    publicationDate: getSubFieldValue(dataField, 'd', true)
                 })).pop() ?? null;
         }
 
-        const blurb: Blurb | null = dataFields
+        document.blurb = dataFields
             .filter(dataField => dataField["mxc:datafield"].tag === "330")
             .map((dataField): Blurb => ({
                 text: getSubFieldValue(dataField, 'a'),
@@ -98,7 +111,7 @@ export const searchBNFDocument = async (query: string): Promise<LibraryDocument[
             })).pop() ?? null;
 
 
-        const collection: Collection | null = dataFields
+        document.collection = dataFields
             .filter(dataField => dataField["mxc:datafield"].tag === "410")
             .map((dataField): Collection => ({
                 title: getSubFieldValue(dataField, 't'),
@@ -108,50 +121,48 @@ export const searchBNFDocument = async (query: string): Promise<LibraryDocument[
                 recordNumber: getSubFieldValue(dataField, '0', true),
             })).pop() ?? null;
 
-        const series: Series | null = dataFields
+        document.series = dataFields
             .filter(dataField => dataField["mxc:datafield"].tag === "461")
             .map((dataField): Series => ({
                 recordNumber: getSubFieldValue(dataField, '0', true),
                 title: getSubFieldValue(dataField, 't'),
-                number: getSubFieldValue(dataField, 'v', false, 'number'),
+                number: getSubFieldValue(dataField, 'v', true, 'number'),
                 publicationDate: getSubFieldValue(dataField, 'd', true),
                 issn: getSubFieldValue(dataField, 'x', true),
             })).pop() ?? null;
 
-        const coverImageUrl = `https://catalogue.bnf.fr/couverture?&appName=NE&idArk=${recordDatum["mxc:record"].id}&couverture=1`
-        const physicalDescription = recordDatum.findDataField(dataField => dataField['mxc:datafield'].tag === '215')?.getSubFieldValue('a', true) ?? null
-        const title = recordDatum.findDataField(dataField => dataField['mxc:datafield'].tag === '200')?.getSubFieldValue('a') as string;
-        const subtitle = recordDatum.findDataField(dataField => dataField['mxc:datafield'].tag === '200')?.getSubFieldValue('e', true) ?? null;
-        const edition = recordDatum.findDataField(dataField => dataField['mxc:datafield'].tag === '205')?.getSubFieldValue('a') ?? null;
-        const isbn = recordDatum.findDataField(dataField => dataField['mxc:datafield'].tag === '010')?.getSubFieldValue('a', true) ?? null;
-        const issn = recordDatum.findDataField(dataField => dataField['mxc:datafield'].tag === '011')?.getSubFieldValue('a', true) ?? null;
-        const numbering = recordDatum.findDataField(dataField => dataField['mxc:datafield'].tag === '207')?.getSubFieldValue('a', false, 'number') ?? null;
-        const periodicity = recordDatum.findDataField(dataField => dataField['mxc:datafield'].tag === '326')?.getSubFieldValue('a', true) ?? null;
-        const notes = recordDatum.findDataField(dataField => dataField['mxc:datafield'].tag === '300')?.getSubFieldValue('a') ?? null;
-        const recordIdentifier = recordDatum.findControlField(dataField => dataField['mxc:controlfield'].tag === '001')?.["mxc:controlfield"].content as string;
-        const arkIdentifier = recordDatum.findControlField(dataField => dataField['mxc:controlfield'].tag === '003')?.["mxc:controlfield"].content as string;
+        dataFields
+            .filter(dataField => dataField["mxc:datafield"].tag === "010")
+            .forEach(dataField => {
+                try {
+                    document.internationalSerialBookNumbers.push({
+                        number: getSubFieldValue(dataField, 'a'),
+                        qualifier: getSubFieldValue(dataField, 'b', true)
+                    });
+                } catch (e) {
+
+                }
+            });
+        document.europeanArticleNumbers = dataFields
+            .filter(dataField => dataField["mxc:datafield"].tag === "073")
+            .map((dataField): Ean => ({
+                number: getSubFieldValue(dataField, 'a'),
+                qualifier: getSubFieldValue(dataField, 'b', true)
+            }));
+
+        document.coverImageUrl = `https://catalogue.bnf.fr/couverture?&appName=NE&idArk=${recordDatum["mxc:record"].id}&couverture=1`
+        document.physicalDescription = recordDatum.findDataField(dataField => dataField['mxc:datafield'].tag === '215')?.getSubFieldValue('a', true) ?? null
+        document.subtitle = recordDatum.findDataField(dataField => dataField['mxc:datafield'].tag === '200')?.getSubFieldValue('e', true) ?? null;
+        document.edition = recordDatum.findDataField(dataField => dataField['mxc:datafield'].tag === '205')?.getSubFieldValue('a') ?? null;
+        document.issn = recordDatum.findDataField(dataField => dataField['mxc:datafield'].tag === '011')?.getSubFieldValue('a', true) ?? null;
+        document.numbering = recordDatum.findDataField(dataField => dataField['mxc:datafield'].tag === '207')?.getSubFieldValue('a', false, 'number') ?? null;
+        document.periodicity = recordDatum.findDataField(dataField => dataField['mxc:datafield'].tag === '326')?.getSubFieldValue('a', true) ?? null;
+        document.notes = recordDatum.findDataField(dataField => dataField['mxc:datafield'].tag === '300')?.getSubFieldValue('a') ?? null;
+        document.recordIdentifier = recordDatum.findControlField(dataField => dataField['mxc:controlfield'].tag === '001')?.["mxc:controlfield"].content as string;
+        document.arkIdentifier = recordDatum.findControlField(dataField => dataField['mxc:controlfield'].tag === '003')?.["mxc:controlfield"].content as string;
 
 
-        return {
-            coverImageUrl,
-            contributors,
-            physicalDescription,
-            title,
-            subtitle,
-            edition,
-            isbn,
-            issn,
-            numbering,
-            periodicity,
-            blurb,
-            publication,
-            subjects,
-            deweyClassifications,
-            series,
-            collection,
-            notes,
-            recordIdentifier,
-            arkIdentifier
-        };
+        documents.push(document);
     });
+    return documents;
 };
