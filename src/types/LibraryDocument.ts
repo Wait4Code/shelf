@@ -26,5 +26,5 @@ export interface LibraryDocument {
     collection: Collection | null;
     notes: string | null;
     recordIdentifier: string | null;
-    arkIdentifier: string | null;
+    arkIdentifier: string;
 }
