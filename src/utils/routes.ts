@@ -1,5 +1,8 @@
+// src/utils/routes.ts
 export enum Routes {
     Homepage = '/',
     Search = '/recherche',
-    Validation = '/scan/validation'
+    ShoppingCart = '/achats',
+    Loans = '/prets',
+    Validation = '/validation'
 }

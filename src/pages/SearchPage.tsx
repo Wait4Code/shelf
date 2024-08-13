@@ -2,13 +2,13 @@
 import React, {useEffect, useState} from 'react';
 import {alpha, AppBar, Box, IconButton, InputBase, styled, Toolbar, Typography} from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
+import SearchIcon from '@mui/icons-material/Search';
 import {useNavigate} from 'react-router-dom';
-import {useSearchStore} from '../stores/searchStore';
 import {BarcodeScanner} from '../components/BarcodeScanner';
-import {LibraryDocumentInterface} from '../types';
-import {searchBNFDocument} from "../utils/libraryDocumentUtils";
+import {useSearchStore} from '../stores/searchStore';
+import {searchBNFDocument} from '../utils/libraryDocumentUtils';
+import {LibraryDocument} from '../types';
 
 const useStyles = {
     toolbar: {
@@ -59,28 +59,27 @@ export const SearchPage: React.FC = () => {
     const navigate = useNavigate();
     const [isSearching, setIsSearching] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
-    const [searchResults, setSearchResults] = useState<LibraryDocumentInterface[]>([]);
+    const [searchResults, setSearchResults] = useState<LibraryDocument[]>([]);
     const {count: searchCount, addLibraryDocument} = useSearchStore();
-
-    const pickResult = (result: LibraryDocumentInterface) => {
-        void addLibraryDocument(result);
-        setIsSearching(false);
-        setSearchQuery('');
-        setSearchResults([]);
-    };
 
     useEffect(() => {
         const delayDebounceFn = setTimeout(() => {
             if (searchQuery) {
                 searchBNFDocument(searchQuery).then(setSearchResults);
+            } else {
+                setSearchResults([]);
             }
-        }, 300)
+        }, 300);
 
-        return () => clearTimeout(delayDebounceFn)
-
-
+        return () => clearTimeout(delayDebounceFn);
     }, [searchQuery]);
 
+    const pickResult = (result: LibraryDocument) => {
+        void addLibraryDocument(result);
+        setIsSearching(false);
+        setSearchResults([]);
+        setSearchQuery('');
+    };
 
     return (
         <Box>
@@ -92,10 +91,10 @@ export const SearchPage: React.FC = () => {
                     {isSearching ? (
                         <Search>
                             <StyledInputBase
-                                autoFocus={true}
                                 placeholder="Rechercher un livre..."
                                 value={searchQuery}
                                 onChange={e => setSearchQuery(e.target.value)}
+                                autoFocus
                             />
                         </Search>
                     ) : (
@@ -111,19 +110,20 @@ export const SearchPage: React.FC = () => {
             <BarcodeScanner/>
             {searchResults.length > 0 && (
                 <Box sx={useStyles.resultsContainer}>
-                    {searchResults.map(result => {
-                        return (
-                            <Box key={result.arkIdentifier} sx={useStyles.resultItem}
-                                 onClick={() => pickResult(result)}>
-                                <Typography variant="h6">{result.title}</Typography>
-                                <Typography variant="subtitle1">{result.subtitle}</Typography>
-                                <Typography
-                                    variant="body2">Auteur(s): {result.contributors.map(c => `${c.firstName} ${c.lastName}`).join(', ')}</Typography>
-                                <Typography
-                                    variant="body2">Publication: {result.publication?.publisher}, {result.publication?.publicationDate}</Typography>
-                            </Box>
-                        );
-                    })}
+                    {searchResults.map(result => (
+                        <Box key={result.arkIdentifier} sx={useStyles.resultItem} onClick={() => pickResult(result)}>
+                            <Typography variant="h6">{result.title}</Typography>
+                            <Typography variant="subtitle1">{result.subtitle}</Typography>
+                            <Typography variant="body2">
+                                Auteur(s) : {result.contributors
+                                .map(contributor => `${contributor.firstName} ${contributor.lastName}`)
+                                .join(', ')}
+                            </Typography>
+                            <Typography variant="body2">
+                                Édition : {result.publication?.publisher}, {result.publication?.publicationDate}
+                            </Typography>
+                        </Box>
+                    ))}
                 </Box>
             )}
         </Box>
