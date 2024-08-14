@@ -13,11 +13,14 @@ const App: React.FC = () => {
     return (
         <BrowserRouter>
             <RouterRoutes>
-                <Route path={Routes.Homepage} Component={Homepage}/>
-                <Route path={Routes.Search} Component={SearchPage}/>
-                <Route path={Routes.ShoppingCart} Component={ShoppingCartPage}/>
-                <Route path={Routes.Loans} Component={LoansPage}/>
-                <Route path={Routes.Validation} Component={ValidationPage}/>
+                <Route path={''}>
+                    <Route path={Routes.home} Component={Homepage}/>
+                    <Route path={Routes.library} Component={Homepage}/>
+                    <Route path={Routes.research} Component={SearchPage}/>
+                    <Route path={Routes.research_results} Component={ValidationPage}/>
+                    <Route path={Routes.shoppingCart} Component={ShoppingCartPage}/>
+                    <Route path={Routes.loans} Component={LoansPage}/>
+                </Route>
             </RouterRoutes>
             <NavigationBar/>
         </BrowserRouter>

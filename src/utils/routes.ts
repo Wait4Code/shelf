@@ -1,8 +1,10 @@
 // src/utils/routes.ts
-export enum Routes {
-    Homepage = '/',
-    Search = '/recherche',
-    ShoppingCart = '/achats',
-    Loans = '/prets',
-    Validation = '/validation'
+
+export const Routes= {
+    home: '/',
+    library: '/livres',
+    research: '/recherche',
+    research_results: 'recherche/résultats',
+    shoppingCart: '/à-acheter',
+    loans: '/prêts'
 }

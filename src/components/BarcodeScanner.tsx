@@ -31,7 +31,7 @@ const useStyles = {
     },
     managementButton: {
         position: 'fixed',
-        bottom: 16,
+        bottom: 16+56,
         right: 16,
         zIndex: 10000,
     }
@@ -92,7 +92,7 @@ export const BarcodeScanner: React.FC = () => {
                 <Fab
                     sx={useStyles.managementButton}
                     color="primary"
-                    onClick={() => navigate(Routes.Validation)}
+                    onClick={() => navigate(Routes.research_results)}
                 >
                     <NavigateNext fontSize="large"/>
                 </Fab>
