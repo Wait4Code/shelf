@@ -58,7 +58,7 @@ export const useSearchStore = create<ResearchStore>((set, get) => ({
                     const idx = state.researches.findIndex(item => research.identifiers === item.identifiers);
                     state.researches[idx].status = ResearchStatus.Error;
 
-                    return state;
+                    return {researches: [...state.researches]};
                 });
             } else {
                 set(state => {
@@ -66,7 +66,7 @@ export const useSearchStore = create<ResearchStore>((set, get) => ({
                     state.researches[idx].status = ResearchStatus.Success;
                     state.researches[idx].documents = documents;
 
-                    return state;
+                    return {researches: [...state.researches]};
 
                 })
             }
@@ -75,7 +75,7 @@ export const useSearchStore = create<ResearchStore>((set, get) => ({
                 const idx = state.researches.findIndex(item => research.identifiers === item.identifiers);
                 state.researches[idx].status = ResearchStatus.Error;
 
-                return state;
+                return {researches: [...state.researches]};
             });
         }
 
