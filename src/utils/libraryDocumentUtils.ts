@@ -14,6 +14,8 @@ import {
 import {BNFResponse, DataFieldInterface, RecordDatum} from "../types/BnfSchema";
 import he from 'he';
 import {has} from "lodash";
+import {DocumentType} from "../types/DocumentType";
+
 
 function getSubFieldValue(dataField: DataFieldInterface, code: string): string;
 function getSubFieldValue<N extends boolean, T extends 'string' | 'number'>(dataField: DataFieldInterface, code: string, nullable: N, type: T): N extends true ? (T extends 'string' ? string : number) | null : T extends 'string' ? string : number;
@@ -55,7 +57,10 @@ export const searchBNFDocument = async (query: string): Promise<LibraryDocumentI
         const recordDatum = new RecordDatum(record["srw:record"].children[2]["srw:recordData"].children[0]);
         const dataFields = recordDatum.getDataFields();
 
-        const document = new LibraryDocument(recordDatum.findDataField(dataField => dataField['mxc:datafield'].tag === '200')?.getSubFieldValue('a') as string);
+        const title = recordDatum.findDataField(dataField => dataField['mxc:datafield'].tag === '200')?.getSubFieldValue('a') as string;
+        const encodedData = recordDatum.findDataField(dataField => dataField['mxc:datafield'].tag === '105')?.getSubFieldValue('a') as string;
+        console.log(title)
+        const document = new LibraryDocument(title, DocumentType.fromValue(encodedData?.at(4) ?? DocumentType.Other));
 
         dataFields.filter(dataField => dataField["mxc:datafield"].tag.startsWith('7'))
             .forEach(dataField => {

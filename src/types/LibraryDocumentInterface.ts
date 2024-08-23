@@ -8,6 +8,7 @@ import {Collection} from "./Collection";
 import {Series} from "./Series";
 import {Isbn} from "./Isbn";
 import {Ean} from "./Ean";
+import {DocumentType} from "./DocumentType";
 
 export interface LibraryDocumentInterface {
     coverImageUrl: string | null;
@@ -30,8 +31,10 @@ export interface LibraryDocumentInterface {
     notes: string | null;
     recordIdentifier: string | null;
     arkIdentifier: string | null;
+    type: typeof DocumentType[keyof typeof DocumentType];
 
-    getIdentifiers: () => string[]
+    getIdentifiers: () => string[];
+    isComicBook: () => boolean;
 }
 
 export class LibraryDocument implements LibraryDocumentInterface {
@@ -55,9 +58,11 @@ export class LibraryDocument implements LibraryDocumentInterface {
     subjects: Subject[] = [];
     subtitle: string | null = null;
     title: string;
+    type: typeof DocumentType[keyof typeof DocumentType];
 
-    constructor(title: string) {
+    constructor(title: string, type: typeof DocumentType[keyof typeof DocumentType]) {
         this.title = title;
+        this.type = type
     }
 
     getIdentifiers() {
@@ -72,5 +77,9 @@ export class LibraryDocument implements LibraryDocumentInterface {
         identifiers.concat(this.europeanArticleNumbers.map(ean => ean.number));
 
         return identifiers;
+    }
+
+    isComicBook() {
+        return this.type === DocumentType.ComicBook;
     }
 }
