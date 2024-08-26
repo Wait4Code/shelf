@@ -32,9 +32,12 @@ export interface LibraryDocumentInterface {
     recordIdentifier: string | null;
     arkIdentifier: string | null;
     type: typeof DocumentType[keyof typeof DocumentType];
+    partNumber: string | null;
+    partTitle: string | null
 
     getIdentifiers: () => string[];
     isComicBook: () => boolean;
+    getVolumeNumber: () => number | string | null;
 }
 
 export class LibraryDocument implements LibraryDocumentInterface {
@@ -59,6 +62,8 @@ export class LibraryDocument implements LibraryDocumentInterface {
     subtitle: string | null = null;
     title: string;
     type: typeof DocumentType[keyof typeof DocumentType];
+    partNumber: string | null = null;
+    partTitle: string | null = null
 
     constructor(title: string, type: typeof DocumentType[keyof typeof DocumentType]) {
         this.title = title;
@@ -81,5 +86,9 @@ export class LibraryDocument implements LibraryDocumentInterface {
 
     isComicBook() {
         return this.type === DocumentType.ComicBook;
+    }
+
+    getVolumeNumber() {
+        return this.series?.number ?? this.partNumber ?? null;
     }
 }

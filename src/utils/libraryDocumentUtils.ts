@@ -1,5 +1,5 @@
 import axios from 'axios';
-import {convertXML} from 'simple-xml-to-json';
+import {convertXML, createAST} from 'simple-xml-to-json';
 import {
     Blurb,
     Collection,
@@ -59,7 +59,7 @@ export const searchBNFDocument = async (query: string): Promise<LibraryDocumentI
 
         const title = recordDatum.findDataField(dataField => dataField['mxc:datafield'].tag === '200')?.getSubFieldValue('a') as string;
         const encodedData = recordDatum.findDataField(dataField => dataField['mxc:datafield'].tag === '105')?.getSubFieldValue('a') as string;
-        console.log(title)
+
         const document = new LibraryDocument(title, DocumentType.fromValue(encodedData?.at(4) ?? DocumentType.Other));
 
         dataFields.filter(dataField => dataField["mxc:datafield"].tag.startsWith('7'))
@@ -158,6 +158,8 @@ export const searchBNFDocument = async (query: string): Promise<LibraryDocumentI
         document.coverImageUrl = `https://catalogue.bnf.fr/couverture?&appName=NE&idArk=${recordDatum["mxc:record"].id}&couverture=1`
         document.physicalDescription = recordDatum.findDataField(dataField => dataField['mxc:datafield'].tag === '215')?.getSubFieldValue('a', true) ?? null
         document.subtitle = recordDatum.findDataField(dataField => dataField['mxc:datafield'].tag === '200')?.getSubFieldValue('e', true) ?? null;
+        document.partNumber = recordDatum.findDataField(dataField => dataField['mxc:datafield'].tag === '200')?.getSubFieldValue('h', true) ?? null;
+        document.partTitle = recordDatum.findDataField(dataField => dataField['mxc:datafield'].tag === '200')?.getSubFieldValue('i', true) ?? null;
         document.edition = recordDatum.findDataField(dataField => dataField['mxc:datafield'].tag === '205')?.getSubFieldValue('a') ?? null;
         document.issn = recordDatum.findDataField(dataField => dataField['mxc:datafield'].tag === '011')?.getSubFieldValue('a', true) ?? null;
         document.numbering = recordDatum.findDataField(dataField => dataField['mxc:datafield'].tag === '207')?.getSubFieldValue('a', false, 'number') ?? null;
