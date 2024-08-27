@@ -1,23 +1,23 @@
 // src/pages/SearchPage.tsx
-import React, {useEffect, useState} from 'react';
-import {alpha, AppBar, Box, IconButton, InputBase, styled, Toolbar, Typography} from '@mui/material';
+import React, {useState, useEffect} from 'react';
+import {alpha, AppBar, Box, IconButton, InputBase, List, ListItem, styled, Toolbar, Typography} from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import CloseIcon from '@mui/icons-material/Close';
 import SearchIcon from '@mui/icons-material/Search';
+import CloseIcon from '@mui/icons-material/Close';
 import {useNavigate} from 'react-router-dom';
-import {BarcodeScanner} from '../components/BarcodeScanner';
 import {useSearchStore} from '../stores/searchStore';
 import {searchBNFDocument} from '../utils/libraryDocumentUtils';
-import {LibraryDocument} from '../types';
+import {DocumentItem} from '../components/DocumentItem';
+import {LibraryDocument} from "../types";
 
 const useStyles = {
     toolbar: {
         display: 'flex',
         justifyContent: 'space-between',
-        alignItems: 'center'
+        alignItems: 'center',
     },
     appbar: {
-        zIndex: 10000
+        zIndex: 10000,
     },
     resultsContainer: {
         position: 'absolute',
@@ -31,7 +31,6 @@ const useStyles = {
         overflowY: 'auto',
     },
     resultItem: {
-        marginBottom: '16px',
         cursor: 'pointer',
     }
 };
@@ -107,25 +106,20 @@ export const SearchPage: React.FC = () => {
                     </IconButton>
                 </Toolbar>
             </AppBar>
-            <BarcodeScanner/>
-            {searchResults.length > 0 && (
-                <Box sx={useStyles.resultsContainer}>
-                    {searchResults.map(result => (
-                        <Box key={result.arkIdentifier} sx={useStyles.resultItem} onClick={() => pickResult(result)}>
-                            <Typography variant="h6">{result.title}</Typography>
-                            <Typography variant="subtitle1">{result.subtitle}</Typography>
-                            <Typography variant="body2">
-                                Auteur(s) : {result.contributors
-                                .map(contributor => `${contributor.firstName} ${contributor.lastName}`)
-                                .join(', ')}
-                            </Typography>
-                            <Typography variant="body2">
-                                Édition : {result.publication?.publisher}, {result.publication?.publicationDate}
-                            </Typography>
-                        </Box>
-                    ))}
-                </Box>
-            )}
+            <Box sx={useStyles.resultsContainer}>
+                {searchResults.length > 0 && (
+                    <List>
+                        {searchResults.map(result => (
+                            <ListItem key={result.arkIdentifier} sx={useStyles.resultItem} onClick={() => pickResult(result)}>
+                                <DocumentItem document={result} />
+                            </ListItem>
+                        ))}
+                    </List>
+                )}
+                {searchResults.length === 0 && searchQuery && (
+                    <Typography>Aucun document trouvé pour "{searchQuery}"</Typography>
+                )}
+            </Box>
         </Box>
     );
 };
