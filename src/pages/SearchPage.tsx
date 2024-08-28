@@ -1,5 +1,5 @@
 // src/pages/SearchPage.tsx
-import React, {useState, useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import {alpha, AppBar, Box, IconButton, InputBase, List, ListItem, styled, Toolbar, Typography} from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SearchIcon from '@mui/icons-material/Search';
@@ -9,6 +9,7 @@ import {useSearchStore} from '../stores/searchStore';
 import {searchBNFDocument} from '../utils/libraryDocumentUtils';
 import {DocumentItem} from '../components/DocumentItem';
 import {LibraryDocument} from "../types";
+import {BarcodeScanner} from "../components/BarcodeScanner";
 
 const useStyles = {
     toolbar: {
@@ -80,6 +81,12 @@ export const SearchPage: React.FC = () => {
         setSearchQuery('');
     };
 
+    const closeManualSearch = () => {
+        setIsSearching(!isSearching);
+        setSearchResults([]);
+        setSearchQuery('');
+    }
+
     return (
         <Box>
             <AppBar position="sticky" sx={useStyles.appbar}>
@@ -101,25 +108,29 @@ export const SearchPage: React.FC = () => {
                             {searchCount() > 0 ? `Livres recherchés : ${searchCount()}` : 'Recherche de livres'}
                         </Typography>
                     )}
-                    <IconButton edge="end" color="inherit" onClick={() => setIsSearching(!isSearching)}>
+                    <IconButton edge="end" color="inherit" onClick={closeManualSearch}>
                         {isSearching ? <CloseIcon/> : <SearchIcon/>}
                     </IconButton>
                 </Toolbar>
             </AppBar>
-            <Box sx={useStyles.resultsContainer}>
-                {searchResults.length > 0 && (
-                    <List>
-                        {searchResults.map(result => (
-                            <ListItem key={result.arkIdentifier} sx={useStyles.resultItem} onClick={() => pickResult(result)}>
-                                <DocumentItem document={result} />
-                            </ListItem>
-                        ))}
-                    </List>
-                )}
-                {searchResults.length === 0 && searchQuery && (
-                    <Typography>Aucun document trouvé pour "{searchQuery}"</Typography>
-                )}
-            </Box>
+            <BarcodeScanner/>
+            {searchResults.length > 0 && (
+                <Box sx={useStyles.resultsContainer}>
+                    {searchResults.length > 0 && (
+                        <List>
+                            {searchResults.map(result => (
+                                <ListItem key={result.arkIdentifier} sx={useStyles.resultItem}
+                                          onClick={() => pickResult(result)}>
+                                    <DocumentItem document={result}/>
+                                </ListItem>
+                            ))}
+                        </List>
+                    )}
+                    {searchResults.length === 0 && searchQuery && (
+                        <Typography>Aucun document trouvé pour "{searchQuery}"</Typography>
+                    )}
+                </Box>
+            )}
         </Box>
     );
 };
