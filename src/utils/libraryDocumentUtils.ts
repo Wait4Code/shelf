@@ -1,5 +1,5 @@
 import axios from 'axios';
-import {convertXML, createAST} from 'simple-xml-to-json';
+import {convertXML} from 'simple-xml-to-json';
 import {
     Blurb,
     Collection,
@@ -88,7 +88,7 @@ export const searchBNFDocument = async (query: string): Promise<LibraryDocumentI
             .filter(dataField => dataField["mxc:datafield"].tag === "676")
             .map((dataField): DeweyClassification => ({
                 index: getSubFieldValue(dataField, 'a'),
-                edition: parseInt(getSubFieldValue(dataField, 'v'), 10)
+                edition: getSubFieldValue(dataField, 'v', true) ? parseInt(getSubFieldValue(dataField, 'v'), 10) : null
             }));
 
 
