@@ -1,6 +1,19 @@
 // src/pages/SearchPage.tsx
 import React, {useEffect, useState} from 'react';
-import {alpha, AppBar, Box, IconButton, InputBase, List, ListItem, styled, Toolbar, Typography} from '@mui/material';
+import {
+    alpha,
+    AppBar,
+    Box,
+    IconButton,
+    InputBase,
+    List,
+    ListItem,
+    styled,
+    SxProps,
+    Theme,
+    Toolbar,
+    Typography
+} from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
@@ -11,7 +24,12 @@ import {DocumentItem} from '../components/DocumentItem';
 import {LibraryDocument} from "../types";
 import {BarcodeScanner} from "../components/BarcodeScanner";
 
-const useStyles = {
+
+type Styles = {
+    [key: string]: SxProps<Theme>
+}
+
+const useStyles: Styles = {
     toolbar: {
         display: 'flex',
         justifyContent: 'space-between',
@@ -20,16 +38,38 @@ const useStyles = {
     appbar: {
         zIndex: 10000,
     },
-    resultsContainer: {
-        position: 'absolute',
-        top: '64px',
-        left: 0,
-        right: 0,
-        backgroundColor: 'white',
-        zIndex: 10001,
-        padding: '16px',
-        maxHeight: 'calc(100vh - 64px)',
-        overflowY: 'auto',
+    resultsContainer: theme => {
+        const base = {
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            backgroundColor: 'white',
+            zIndex: 10001,
+            padding: '16px',
+            bottom: '56px',
+            overflowY: 'auto',
+        };
+
+        const setupTopValues = (pieceOfTheme: object) => {
+            const newTheme: Styles = {};
+            for (const [key, value] of Object.entries(pieceOfTheme)) {
+                let newValue = value;
+                if (typeof value === 'object') {
+                    newValue = setupTopValues(value);
+                }
+                if (key === 'minHeight') {
+                    newTheme['top'] = newValue;
+                } else {
+                    newTheme[key] = newValue;
+                }
+            }
+            return newTheme;
+        }
+
+        return {
+            ...base,
+            ...setupTopValues(theme.mixins.toolbar)
+        };
     },
     resultItem: {
         cursor: 'pointer',
@@ -49,11 +89,11 @@ const Search = styled('div')(({theme}) => ({
 
 const StyledInputBase = styled(InputBase)(({theme}) => ({
     color: 'inherit',
-    width: '100%',
     '& .MuiInputBase-input': {
         padding: theme.spacing(1, 1, 1, 1),
     },
 }));
+
 
 export const SearchPage: React.FC = () => {
     const navigate = useNavigate();
@@ -97,10 +137,12 @@ export const SearchPage: React.FC = () => {
                     {isSearching ? (
                         <Search>
                             <StyledInputBase
+                                fullWidth={true}
                                 placeholder="Rechercher un livre..."
                                 value={searchQuery}
                                 onChange={e => setSearchQuery(e.target.value)}
                                 autoFocus
+                                // onKeyUp={event => event.}
                             />
                         </Search>
                     ) : (
