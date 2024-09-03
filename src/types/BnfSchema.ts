@@ -77,7 +77,7 @@ export class DataField implements DataFieldInterface {
         }
         const content = he.decode(subfield["mxc:subfield"].content);
 
-        return type === 'string' ? content : parseInt(content, 10);
+        return type === 'string' ? content.replace(/(\w)"(\w)/, "$1'$2") : parseInt(content, 10);
     }
 }
 
