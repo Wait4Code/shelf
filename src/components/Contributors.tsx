@@ -11,7 +11,11 @@ export const Contributors: React.FC<DocumentContributorsProps> = ({contributors}
     return (
         <Box sx={{overflow: 'hidden', whiteSpace: 'nowrap', textOverflow: 'ellipsis'}}>
             <Typography variant="body2" component="span" sx={{fontWeight: 'bold'}}>
-                {contributors.map(contributor => `${contributor.firstName} ${contributor.lastName}`).join(', ')}
+                {contributors.map(({firstName, lastName}) => {
+                    let naming = firstName;
+                    naming = naming ? `${naming} ${lastName}` : lastName;
+                    return naming;
+                }).join(', ')}
             </Typography>
         </Box>
     );

@@ -14,7 +14,8 @@ export const DocumentItem: React.FC<DocumentItemProps> = ({document}) => {
     const useStyles = {
         bookDetails: {
             display: 'flex',
-            alignItems: 'center',
+            alignItems: 'stretch',
+            gap: 2
         },
         thumbnail: {
             height: 'auto',
@@ -22,25 +23,29 @@ export const DocumentItem: React.FC<DocumentItemProps> = ({document}) => {
             maxHeight: '100%',
         },
         thumbnailContainer: {
-            height: '110px',
-            width: '90px',
-            marginRight: '8px',
+            display: 'flex',
+            alignItems: 'center',
+            flexShrink: 0,
+            height: {xs: 0.75 * 110, md: 110},
+            width: {xs: 110 / 1.5 * 0.75, md: 110 / 1.5},
         }
     };
 
     return (
         <Box sx={useStyles.bookDetails}>
-            <Box style={useStyles.thumbnailContainer}>
+            <Box sx={useStyles.thumbnailContainer}>
                 <img
                     src={document.coverImageUrl ?? 'https://catalogue.bnf.fr/couverture?&appName=NE&idArk=&couverture=1'}
                     alt="Couverture"
                     style={useStyles.thumbnail}
                 />
             </Box>
-            <Box>
+            <Box sx={{display: 'flex', flexDirection: 'column', gap: 1}}>
                 <DocumentTitle document={document}/>
-                <Contributors contributors={document.contributors}/>
-                <Publication publication={document.publication}/>
+                <Box sx={{display: 'flex', flexDirection: 'column'}}>
+                    <Contributors contributors={document.contributors}/>
+                    <Publication publication={document.publication}/>
+                </Box>
             </Box>
         </Box>
     );

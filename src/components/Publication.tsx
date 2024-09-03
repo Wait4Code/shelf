@@ -8,13 +8,14 @@ interface PublicationProps {
 }
 
 export const Publication: React.FC<PublicationProps> = ({publication}) => {
-    if (!publication) {
+    if (!publication || (!publication.publisher && !publication.publicationDate)) {
         return null;
     }
 
+    let text = publication.publisher
+    text = text ? `${publication.publisher}, ${publication.publicationDate}` : publication.publicationDate;
+
     return (
-        <Typography variant="body2">
-            {publication.publisher}, {publication.publicationDate}
-        </Typography>
+        <Typography variant="body2">{text}</Typography>
     );
 };

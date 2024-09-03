@@ -46,12 +46,12 @@ export const DocumentTitle: React.FC<DocumentTitleProps> = ({document}) => {
 
     return (
         <Box>
-            <Typography variant="h5" component="span" style={{fontStyle: 'italic'}}>
+            <Typography variant="h6" component="span" style={{fontStyle: 'italic'}}>
                 {main}
             </Typography>
-            {numbering && !sub && <Typography component="span" variant="h5"> · {numbering}</Typography>}
+            {numbering && !sub && <Typography component="span" variant="h6"> · {numbering}</Typography>}
             <Box>
-                {sub && <Typography component="span" variant="h6">{sub}</Typography>}
+                {sub && <Typography component="span" variant="subtitle1">{sub}</Typography>}
             </Box>
         </Box>
     );
