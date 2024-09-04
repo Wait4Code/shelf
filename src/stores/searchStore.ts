@@ -13,7 +13,7 @@ export enum ResearchStatus {
 
 
 interface LibraryDocumentResearch {
-    documents: LibraryDocumentInterface[]
+    documents: CompetingDocuments
     status: ResearchStatus,
     identifiers: Array<string>,
 }
@@ -27,6 +27,43 @@ interface ResearchStore {
     hasAnyIdentifier: HasAnyIdentifierFunction,
     count: CountFunction
 }
+
+interface CompetingDocumentsInterface {
+    getDivergentKeys: () => Array<string>
+}
+
+class CompetingDocuments extends Array<LibraryDocumentInterface> implements CompetingDocumentsInterface {
+    getDivergentKeys() {
+        const differences = [];
+        const values: { [k: string]: Array<string | number | null> } = {};
+        this.forEach(item => {
+            for (const [key, value] of Object.entries(item)) {
+                values[key] = values[key] ?? [];
+
+
+                if (Array.isArray(value)) {
+                    value.forEach((v, key2) => {
+                        values[key][key2] = v && typeof v === 'object' ? JSON.stringify(value) : v;
+                    })
+                } else if (value && typeof value === 'object') {
+                    values[key] = [...values[key], JSON.stringify(value)];
+                } else {
+                    values[key] = [...values[key], value];
+                }
+            }
+        })
+
+        for (const [key, value] of Object.entries(values)) {
+            if (!value.every(v => v === value[0])) {
+                differences.push(key)
+            }
+
+        }
+
+        return differences
+    }
+}
+
 
 type ResearchFunction = (barcode: string) => Promise<void>;
 type AddLibraryDocumentFunction = (document: LibraryDocumentInterface) => Promise<void>;
@@ -43,7 +80,7 @@ export const useSearchStore = create<ResearchStore>((set, get) => ({
         }
 
         const research: LibraryDocumentResearch = {
-            documents: [],
+            documents: new CompetingDocuments(),
             status: ResearchStatus.Pending,
             identifiers: [barcode]
         }
@@ -64,7 +101,7 @@ export const useSearchStore = create<ResearchStore>((set, get) => ({
                 set(state => {
                     const idx = state.researches.findIndex(item => research.identifiers === item.identifiers);
                     state.researches[idx].status = ResearchStatus.Success;
-                    state.researches[idx].documents = documents;
+                    state.researches[idx].documents = new CompetingDocuments(...documents);
 
                     return {researches: [...state.researches]};
 
@@ -87,7 +124,7 @@ export const useSearchStore = create<ResearchStore>((set, get) => ({
         }
 
         const research: LibraryDocumentResearch = {
-            documents: [document],
+            documents: new CompetingDocuments(document),
             status: ResearchStatus.Success,
             identifiers: document.getIdentifiers(),
         }
