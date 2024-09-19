@@ -5,7 +5,7 @@ import {Homepage} from "./pages/Homepage";
 import {LoansPage} from "./pages/LoansPage";
 import {SearchPage} from "./pages/SearchPage";
 import {ShoppingCartPage} from "./pages/ShoppingCartPage";
-import {ValidationPage} from "./pages/ValidationPage";
+import {SearchResultsHandlingPage} from "./pages/SearchResultsHandlingPage";
 import {NavigationBar} from "./components/NavigationBar";
 import {Routes} from "./utils/routes";
 
@@ -17,7 +17,7 @@ const App: React.FC = () => {
                     <Route path={Routes.home} Component={Homepage}/>
                     <Route path={Routes.library} Component={Homepage}/>
                     <Route path={Routes.research} Component={SearchPage}/>
-                    <Route path={Routes.research_results} Component={ValidationPage}/>
+                    <Route path={Routes.research_results} Component={SearchResultsHandlingPage}/>
                     <Route path={Routes.shoppingCart} Component={ShoppingCartPage}/>
                     <Route path={Routes.loans} Component={LoansPage}/>
                 </Route>

@@ -1,4 +1,4 @@
-// src/pages/ValidationPage.tsx
+// src/pages/SearchResultsHandlingPage.tsx
 import React from 'react';
 import {AppBar, Box, Button, CircularProgress, IconButton, List, ListItem, Toolbar, Typography} from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -30,7 +30,7 @@ const useStyles = {
     },
 };
 
-export const ValidationPage: React.FC = () => {
+export const SearchResultsHandlingPage: React.FC = () => {
     const researches = useSearchStore(state => state.researches);
     const clearScans = useSearchStore(state => state.clear);
     const navigate = useNavigate();
