@@ -1,15 +1,28 @@
 // src/pages/SearchResultsHandlingPage.tsx
 import React from 'react';
-import {AppBar, Box, Button, CircularProgress, IconButton, List, ListItem, Toolbar, Typography} from '@mui/material';
+import {
+    AppBar,
+    Box,
+    Button,
+    CircularProgress,
+    IconButton,
+    List,
+    ListItem,
+    styled,
+    Toolbar,
+    Typography
+} from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import {useNavigate} from 'react-router-dom';
 import {ResearchStatus, useSearchStore} from '../stores/searchStore';
 import {DocumentItem} from '../components/DocumentItem';
 
+
+const Offset = styled('div')(({theme}) => theme.mixins.toolbar);
+
+
 const useStyles = {
-    container: {
-        marginTop: '16px',
-    },
+    container: {},
     resultItem: {
         marginLeft: '16px',
         padding: '8px',
@@ -68,8 +81,9 @@ export const SearchResultsHandlingPage: React.FC = () => {
                                 </Typography>
                             )}
                             {status === ResearchStatus.Success && documents.length > 0 && documents.map((document, index) => (
-                                <Box key={`${identifiers.join('-')}_${index}`} sx={documents.length > 1 ? useStyles.resultItem : {}}>
-                                    <DocumentItem document={document} />
+                                <Box key={`${identifiers.join('-')}_${index}`}
+                                     sx={documents.length > 1 ? useStyles.resultItem : {}}>
+                                    <DocumentItem document={document}/>
                                 </Box>
                             ))}
                         </ListItem>
@@ -79,6 +93,7 @@ export const SearchResultsHandlingPage: React.FC = () => {
                     Ajouter à la bibliothèque
                 </Button>
             </Box>
+            <Offset/>
         </Box>
     );
 };
