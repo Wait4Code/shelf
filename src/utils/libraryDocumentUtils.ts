@@ -36,14 +36,14 @@ function getSubFieldValue(dataField: DataFieldInterface, code: string, nullable 
 
 // Fonction pour interroger l'API BNF SRU et parser le résultat XML en une liste de LibraryDocuments
 export const searchBNFDocument = async (query: string): Promise<LibraryDocumentInterface[]> => {
-    const bnfApiUrl = new URL("https://catalogue.bnf.fr/api/SRU")
+    const bnfApiUrl = new URL(`${process.env.REACT_APP_BNF_URL}/api/SRU`)
     bnfApiUrl.searchParams.set("version", "1.2");
     bnfApiUrl.searchParams.set("operation", "searchRetrieve");
     bnfApiUrl.searchParams.set("query", `bib.anywhere all "${query}"`);
     // noinspection SpellCheckingInspection
     bnfApiUrl.searchParams.set("recordSchema", "unimarcXchange");
 
-    const response = await axios.get(`https://corsproxy.io/?${encodeURIComponent(bnfApiUrl.toString())}`);
+    const response = await axios.get(bnfApiUrl.toString());
 
     const result = convertXML(response.data) as BNFResponse;
     const records = result["srw:searchRetrieveResponse"].children[3]["srw:records"].children ?? [];
