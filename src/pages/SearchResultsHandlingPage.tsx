@@ -15,7 +15,8 @@ import {
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import {useNavigate} from 'react-router-dom';
 import {ResearchStatus, useSearchStore} from '../stores/searchStore';
-import {DocumentItem} from '../components/DocumentItem';
+import {LibraryDocumentInterface} from "../types";
+import {ResearchItem} from "../components/ResearchItem";
 
 
 const Offset = styled('div')(({theme}) => theme.mixins.toolbar);
@@ -23,11 +24,7 @@ const Offset = styled('div')(({theme}) => theme.mixins.toolbar);
 
 const useStyles = {
     container: {},
-    resultItem: {
-        marginLeft: '16px',
-        padding: '8px',
-        borderLeft: '2px solid gray',
-    },
+
     appbar: {
         zIndex: 10000,
     },
@@ -43,14 +40,27 @@ const useStyles = {
     },
 };
 
+
 export const SearchResultsHandlingPage: React.FC = () => {
+    const [selectedDocuments, setSelectedDocuments] = React.useState<{ [k: string]: LibraryDocumentInterface }>({});
     const researches = useSearchStore(state => state.researches);
     const clearScans = useSearchStore(state => state.clear);
     const navigate = useNavigate();
 
+
+    const selectDocument = (identifiers: Array<string>, document: LibraryDocumentInterface | null) => {
+        if(!document){
+            delete selectedDocuments[identifiers.join('-')];
+            setSelectedDocuments({...selectedDocuments});
+        }else{
+            setSelectedDocuments({...selectedDocuments, [identifiers.join('-')]: document});
+        }
+    }
+
     const handleAddToLibrary = () => {
-        clearScans();
-        navigate('/');
+        console.log(Object.values(selectedDocuments));
+        // clearScans();
+        // navigate('/');
     };
 
     return (
@@ -75,17 +85,10 @@ export const SearchResultsHandlingPage: React.FC = () => {
                             {status === ResearchStatus.Error && (
                                 <Typography color="error">Erreur lors de la recherche</Typography>
                             )}
-                            {status === ResearchStatus.Success && documents.length === 0 && (
-                                <Typography>
-                                    Aucun document trouvé pour "<strong>{identifiers.join(', ')}</strong>"
-                                </Typography>
-                            )}
-                            {status === ResearchStatus.Success && documents.length > 0 && documents.map((document, index) => (
-                                <Box key={`${identifiers.join('-')}_${index}`}
-                                     sx={documents.length > 1 ? useStyles.resultItem : {}}>
-                                    <DocumentItem document={document}/>
-                                </Box>
-                            ))}
+                            {status === ResearchStatus.Success &&
+                                <ResearchItem documents={documents} identifiers={identifiers}
+                                              onSelected={selectDocument}/>
+                            }
                         </ListItem>
                     ))}
                 </List>

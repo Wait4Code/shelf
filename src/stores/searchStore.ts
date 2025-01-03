@@ -28,7 +28,7 @@ interface ResearchStore {
     count: CountFunction
 }
 
-interface CompetingDocumentsInterface {
+export interface CompetingDocumentsInterface extends Array<LibraryDocumentInterface> {
     getDivergentKeys: () => Array<string>
 }
 
