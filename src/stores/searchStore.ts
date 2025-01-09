@@ -2,7 +2,7 @@
 import {create} from 'zustand';
 import {LibraryDocumentInterface} from "../types";
 import {searchBNFDocument} from "../utils/libraryDocumentUtils";
-import {intersection} from "lodash";
+import {flatten, intersection} from "lodash";
 
 
 export enum ResearchStatus {
@@ -22,6 +22,7 @@ interface ResearchStore {
     researches: Array<LibraryDocumentResearch>
     research: ResearchFunction,
     addLibraryDocument: AddLibraryDocumentFunction,
+    addDocumentsToResearch: addDocumentsToResearchFunction
     clear: VoidFunction,
     hasIdentifier: HasIdentifierFunction,
     hasAnyIdentifier: HasAnyIdentifierFunction,
@@ -67,6 +68,7 @@ class CompetingDocuments extends Array<LibraryDocumentInterface> implements Comp
 
 type ResearchFunction = (barcode: string) => Promise<void>;
 type AddLibraryDocumentFunction = (document: LibraryDocumentInterface) => Promise<void>;
+type addDocumentsToResearchFunction = (identifiers: Array<string>, ...documents: LibraryDocumentInterface[]) => Promise<void>;
 type HasIdentifierFunction = (identifier: string) => boolean;
 type HasAnyIdentifierFunction = (...identifiers: string[]) => boolean;
 type CountFunction = () => number;
@@ -89,24 +91,7 @@ export const useSearchStore = create<ResearchStore>((set, get) => ({
 
         try {
             const documents = await searchBNFDocument(barcode);
-
-            if (!documents) {
-                set(state => {
-                    const idx = state.researches.findIndex(item => research.identifiers === item.identifiers);
-                    state.researches[idx].status = ResearchStatus.Error;
-
-                    return {researches: [...state.researches]};
-                });
-            } else {
-                set(state => {
-                    const idx = state.researches.findIndex(item => research.identifiers === item.identifiers);
-                    state.researches[idx].status = ResearchStatus.Success;
-                    state.researches[idx].documents = new CompetingDocuments(...documents);
-
-                    return {researches: [...state.researches]};
-
-                })
-            }
+            set(addDocument(research.identifiers, documents))
         } catch (error) {
             set(state => {
                 const idx = state.researches.findIndex(item => research.identifiers === item.identifiers);
@@ -131,8 +116,27 @@ export const useSearchStore = create<ResearchStore>((set, get) => ({
 
         set(state => ({researches: [...state.researches, research]}));
     },
+    addDocumentsToResearch: async (identifiers, ...documents) => {
+        if (!get().hasAnyIdentifier(...identifiers)) {
+            return;
+        }
+
+        set(addDocument(identifiers, documents))
+    },
     clear: () => set({researches: []}),
     hasIdentifier: identifier => Boolean(get().researches.find(item => item.identifiers.includes(identifier))),
     hasAnyIdentifier: (...identifiers) => Boolean(get().researches.find(item => intersection(item.identifiers, identifiers).length)),
     count: () => get().researches.length,
 }));
+
+const addDocument = (identifiers: Array<string>, documents: Array<LibraryDocumentInterface>) => (state: ResearchStore) => {
+    const idx = state.researches.findIndex(item => identifiers === item.identifiers);
+    state.researches[idx].status = ResearchStatus.Success;
+    state.researches[idx].documents = new CompetingDocuments(...documents);
+    state.researches[idx].identifiers = [
+        ...state.researches[idx].identifiers,
+        ...flatten(documents.map(document => document.getIdentifiers()))
+    ];
+
+    return {researches: [...state.researches]};
+}

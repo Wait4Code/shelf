@@ -1,8 +1,9 @@
 import React, {ChangeEvent} from 'react';
 import {CompetingDocumentsInterface} from "../stores/searchStore";
-import {Box, Checkbox, Radio, RadioGroup, Typography} from "@mui/material";
+import {Box, Checkbox, Radio, RadioGroup} from "@mui/material";
 import {DocumentItem} from "./DocumentItem";
 import {LibraryDocumentInterface} from "../types";
+import {NotFoundItem} from "./research/NotFoundItem";
 
 interface ResearchItemProps {
     documents: CompetingDocumentsInterface,
@@ -44,9 +45,7 @@ export const ResearchItem: React.FC<ResearchItemProps> = ({documents, identifier
     }
 
     if (documents.length === 0) {
-        return <Typography>
-            Aucun document trouvé pour "<strong>{identifiers.join(', ')}</strong>"
-        </Typography>
+        return <NotFoundItem identifiers={identifiers}/>
     }
 
     return (
