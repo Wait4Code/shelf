@@ -1,3 +1,4 @@
+const FillingChar = '|';
 export const DocumentType = {
     BelowDoctorateThesisDissertation: '7',
     Bibliography: 'a',
@@ -20,6 +21,10 @@ export const DocumentType = {
     Other: 'z',
 
     fromValue(value: string) {
+        if (value === FillingChar) {
+            return this.Other;
+        }
+
         for (const typeValue of Object.values(this)) {
             if (typeValue === value) {
                 return typeValue;
