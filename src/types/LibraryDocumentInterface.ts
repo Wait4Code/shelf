@@ -37,7 +37,7 @@ export interface LibraryDocumentInterface {
 
     getIdentifiers: () => string[];
     isComicBook: () => boolean;
-    getVolumeNumber: () => number | string | null;
+    getVolumeNumber: () => string | null;
 }
 
 export class LibraryDocument implements LibraryDocumentInterface {
@@ -89,6 +89,6 @@ export class LibraryDocument implements LibraryDocumentInterface {
     }
 
     getVolumeNumber() {
-        return this.series?.number ?? this.partNumber ?? null;
+        return this.series?.number?.toString() ?? this.partNumber ?? null;
     }
 }

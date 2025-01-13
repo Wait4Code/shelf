@@ -13,10 +13,10 @@ export const DocumentTitle: React.FC<DocumentTitleProps> = ({document}) => {
     const seriesTitle = document.series?.title;
 
     let main = document.title;
-    let numbering = null;
+    let numbering: string | null = null;
     let sub = null
     if (volumeNumber) {
-        numbering = `Tome ${volumeNumber}`;
+        numbering = volumeNumber.includes('Tome') ? volumeNumber : `Tome ${volumeNumber}`;
     }
 
 
