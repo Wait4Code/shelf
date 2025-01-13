@@ -17,7 +17,7 @@ export const NotFoundItem: React.FC<NotFoundItemProps> = ({identifiers}) => {
     const [document, setDocument] = React.useState<LibraryDocumentInterface | null>(null);
     const {addDocumentsToResearch, hasAnyIdentifier} = useSearchStore();
 
-    const cancel =()=>{
+    const cancel = () => {
         selectDocument(null);
         handleClose();
     }
