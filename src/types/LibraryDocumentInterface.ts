@@ -78,8 +78,8 @@ export class LibraryDocument implements LibraryDocumentInterface {
         if (this.recordIdentifier) {
             identifiers.push(this.recordIdentifier)
         }
-        identifiers.concat(this.internationalSerialBookNumbers.map(isbn => isbn.number));
-        identifiers.concat(this.europeanArticleNumbers.map(ean => ean.number));
+        identifiers.push(...this.internationalSerialBookNumbers.map(isbn => isbn.number));
+        identifiers.push(...this.europeanArticleNumbers.map(ean => ean.number));
 
         return identifiers;
     }
