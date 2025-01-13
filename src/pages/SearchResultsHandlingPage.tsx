@@ -1,25 +1,10 @@
 // src/pages/SearchResultsHandlingPage.tsx
-import React from 'react';
-import {
-    AppBar,
-    Box,
-    Button,
-    CircularProgress,
-    IconButton,
-    List,
-    ListItem,
-    styled,
-    Toolbar,
-    Typography
-} from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import {useNavigate} from 'react-router-dom';
+import React, {useContext, useEffect} from 'react';
+import {Box, Button, CircularProgress, List, ListItem, Typography} from '@mui/material';
 import {ResearchStatus, useSearchStore} from '../stores/searchStore';
 import {LibraryDocumentInterface} from "../types";
 import {ResearchItem} from "../components/ResearchItem";
-
-
-const Offset = styled('div')(({theme}) => theme.mixins.toolbar);
+import {HeaderContext} from '../stores/header';
 
 
 const useStyles = {
@@ -45,14 +30,28 @@ export const SearchResultsHandlingPage: React.FC = () => {
     const [selectedDocuments, setSelectedDocuments] = React.useState<{ [k: string]: LibraryDocumentInterface }>({});
     const researches = useSearchStore(state => state.researches);
     const clearScans = useSearchStore(state => state.clear);
-    const navigate = useNavigate();
+    const {setHeaderStyles, setToolbarStyles, setContent} = useContext(HeaderContext);
+    useEffect(() => {
+        setHeaderStyles(useStyles.appbar);
+        setToolbarStyles(useStyles.toolbar);
 
+        setContent(<Box sx={useStyles.titleContainer}>
+            <Typography variant="h6" align="center">
+                Résultats de recherche
+            </Typography>
+        </Box>)
+        return () => {
+            setHeaderStyles({});
+            setToolbarStyles({});
+            setContent(<></>);
+        };
+    }, [setHeaderStyles, setToolbarStyles, setContent]);
 
     const selectDocument = (identifiers: Array<string>, document: LibraryDocumentInterface | null) => {
-        if(!document){
+        if (!document) {
             delete selectedDocuments[identifiers.join('-')];
             setSelectedDocuments({...selectedDocuments});
-        }else{
+        } else {
             setSelectedDocuments({...selectedDocuments, [identifiers.join('-')]: document});
         }
     }
@@ -65,18 +64,6 @@ export const SearchResultsHandlingPage: React.FC = () => {
 
     return (
         <Box>
-            <AppBar position="sticky" sx={useStyles.appbar}>
-                <Toolbar sx={useStyles.toolbar}>
-                    <IconButton edge="start" color="inherit" onClick={() => navigate(-1)}>
-                        <ArrowBackIcon/>
-                    </IconButton>
-                    <Box sx={useStyles.titleContainer}>
-                        <Typography variant="h6" align="center">
-                            Résultats de recherche
-                        </Typography>
-                    </Box>
-                </Toolbar>
-            </AppBar>
             <Box sx={useStyles.container}>
                 <List>
                     {researches.map(({documents, status, identifiers}) => (
@@ -96,7 +83,6 @@ export const SearchResultsHandlingPage: React.FC = () => {
                     Ajouter à la bibliothèque
                 </Button>
             </Box>
-            <Offset/>
         </Box>
     );
 };

@@ -1,28 +1,14 @@
 // src/pages/SearchPage.tsx
-import React, {useEffect, useState} from 'react';
-import {
-    alpha,
-    AppBar,
-    Box,
-    IconButton,
-    InputBase,
-    List,
-    ListItem,
-    styled,
-    SxProps,
-    Theme,
-    Toolbar,
-    Typography
-} from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import React, {useContext, useEffect, useState} from 'react';
+import {alpha, Box, IconButton, InputBase, List, ListItem, styled, SxProps, Theme, Typography} from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
-import {useNavigate} from 'react-router-dom';
 import {useSearchStore} from '../stores/searchStore';
 import {searchBNFDocument} from '../utils/libraryDocumentUtils';
 import {DocumentItem} from '../components/DocumentItem';
 import {LibraryDocument} from "../types";
 import {BarcodeScanner} from "../components/BarcodeScanner";
+import {HeaderContext} from "../stores/header";
 
 
 type Styles = {
@@ -96,11 +82,51 @@ const StyledInputBase = styled(InputBase)(({theme}) => ({
 
 
 export const SearchPage: React.FC = () => {
-    const navigate = useNavigate();
     const [isSearching, setIsSearching] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
     const [searchResults, setSearchResults] = useState<LibraryDocument[]>([]);
     const {count: searchCount, addLibraryDocument} = useSearchStore();
+    const {setHeaderStyles, setToolbarStyles, setContent} = useContext(HeaderContext);
+
+
+    useEffect(() => {
+        const closeManualSearch = () => {
+            setIsSearching(!isSearching);
+            setSearchResults([]);
+            setSearchQuery('');
+        }
+
+        setHeaderStyles(useStyles.appbar);
+        setToolbarStyles(useStyles.toolbar);
+
+        setContent(<>
+            {isSearching ? (
+                <Search>
+                    <StyledInputBase
+                        fullWidth={true}
+                        placeholder="Rechercher un livre..."
+                        value={searchQuery}
+                        onChange={e => setSearchQuery(e.target.value)}
+                        autoFocus
+                    />
+                </Search>
+            ) : (
+                <Typography variant="h6">
+                    {searchCount() > 0 ? `Livres recherchés : ${searchCount()}` : 'Recherche de livres'}
+                </Typography>
+            )}
+            <IconButton edge="end" color="inherit" onClick={closeManualSearch}>
+                {isSearching ? <CloseIcon/> : <SearchIcon/>}
+            </IconButton>
+        </>)
+
+        return () => {
+            setHeaderStyles({});
+            setToolbarStyles({});
+            setContent(<></>);
+        };
+    }, [setHeaderStyles, setToolbarStyles, setContent, isSearching, searchCount, searchQuery]);
+
 
     useEffect(() => {
         const delayDebounceFn = setTimeout(() => {
@@ -121,40 +147,9 @@ export const SearchPage: React.FC = () => {
         setSearchQuery('');
     };
 
-    const closeManualSearch = () => {
-        setIsSearching(!isSearching);
-        setSearchResults([]);
-        setSearchQuery('');
-    }
 
     return (
         <Box>
-            <AppBar position="sticky" sx={useStyles.appbar}>
-                <Toolbar sx={useStyles.toolbar}>
-                    <IconButton edge="start" color="inherit" onClick={() => navigate(-1)}>
-                        <ArrowBackIcon/>
-                    </IconButton>
-                    {isSearching ? (
-                        <Search>
-                            <StyledInputBase
-                                fullWidth={true}
-                                placeholder="Rechercher un livre..."
-                                value={searchQuery}
-                                onChange={e => setSearchQuery(e.target.value)}
-                                autoFocus
-                                // onKeyUp={event => event.}
-                            />
-                        </Search>
-                    ) : (
-                        <Typography variant="h6">
-                            {searchCount() > 0 ? `Livres recherchés : ${searchCount()}` : 'Recherche de livres'}
-                        </Typography>
-                    )}
-                    <IconButton edge="end" color="inherit" onClick={closeManualSearch}>
-                        {isSearching ? <CloseIcon/> : <SearchIcon/>}
-                    </IconButton>
-                </Toolbar>
-            </AppBar>
             <BarcodeScanner/>
             {searchResults.length > 0 && (
                 <Box sx={useStyles.resultsContainer}>

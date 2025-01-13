@@ -6,24 +6,26 @@ import {LoansPage} from "./pages/LoansPage";
 import {SearchPage} from "./pages/SearchPage";
 import {ShoppingCartPage} from "./pages/ShoppingCartPage";
 import {SearchResultsHandlingPage} from "./pages/SearchResultsHandlingPage";
-import {NavigationBar} from "./components/NavigationBar";
 import {Routes} from "./utils/routes";
+import {Layout} from "./components/Layout";
+import {HeaderProvider} from './stores/header';
 
 const App: React.FC = () => {
     return (
-        <BrowserRouter>
-            <RouterRoutes>
-                <Route path={''}>
-                    <Route path={Routes.home} Component={Homepage}/>
-                    <Route path={Routes.library} Component={Homepage}/>
-                    <Route path={Routes.research} Component={SearchPage}/>
-                    <Route path={Routes.research_results} Component={SearchResultsHandlingPage}/>
-                    <Route path={Routes.shoppingCart} Component={ShoppingCartPage}/>
-                    <Route path={Routes.loans} Component={LoansPage}/>
-                </Route>
-            </RouterRoutes>
-            <NavigationBar/>
-        </BrowserRouter>
+        <HeaderProvider>
+            <BrowserRouter>
+                <RouterRoutes>
+                    <Route path={''} element={<Layout/>}>
+                        <Route path={Routes.home} Component={Homepage}/>
+                        <Route path={Routes.library} Component={Homepage}/>
+                        <Route path={Routes.research} Component={SearchPage}/>
+                        <Route path={Routes.research_results} Component={SearchResultsHandlingPage}/>
+                        <Route path={Routes.shoppingCart} Component={ShoppingCartPage}/>
+                        <Route path={Routes.loans} Component={LoansPage}/>
+                    </Route>
+                </RouterRoutes>
+            </BrowserRouter>
+        </HeaderProvider>
     );
 };
 
