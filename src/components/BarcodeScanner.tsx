@@ -24,7 +24,7 @@ const useStyles = {
         display: 'flex',
         justifyContent: 'stretch',
         alignItems: 'stretch',
-        zIndex: 9999,
+        zIndex: -1,
     },
     scanner: {
         flexGrow: 1,
@@ -33,7 +33,6 @@ const useStyles = {
         position: 'fixed',
         bottom: 16+56,
         right: 16,
-        zIndex: 10000,
     }
 };
 

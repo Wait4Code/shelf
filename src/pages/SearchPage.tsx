@@ -21,9 +21,6 @@ const useStyles: Styles = {
         justifyContent: 'space-between',
         alignItems: 'center',
     },
-    appbar: {
-        zIndex: 10000,
-    },
     resultsContainer: theme => {
         const base = {
             position: 'absolute',
