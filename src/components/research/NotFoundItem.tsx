@@ -69,13 +69,13 @@ export const NotFoundItem: React.FC<NotFoundItemProps> = ({identifiers}) => {
                     <ManualResearch callback={selectDocument}
                                     renderInput={params =>
                                         <TextField {...params} label="Titre, Auteur, édition, ..." fullWidth
-                                                   variant="standard"/>}
+                                                   variant="standard" autoFocus/>}
                     />
                 </Box>
             </DialogContent>
             <DialogActions>
                 <Button onClick={cancel}>Annuler</Button>
-                <Button autoFocus onClick={validateManualResearch} disabled={isValid}>Valider</Button>
+                <Button onClick={validateManualResearch} disabled={isValid}>Valider</Button>
             </DialogActions>
         </Dialog>
     </>

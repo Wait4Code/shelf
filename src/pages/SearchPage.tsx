@@ -66,6 +66,7 @@ export const SearchPage: React.FC = () => {
                                     return (
                                         <div ref={ref}>
                                             <InputBase
+                                                autoFocus
                                                 sx={useStyles.autocompleteInput}
                                                 placeholder="Rechercher un livre..." {...inputParams} />
                                         </div>
