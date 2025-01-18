@@ -1,5 +1,15 @@
 import React from 'react';
-import {Alert, Box, Button, Dialog, DialogActions, DialogContent, DialogTitle, Typography} from "@mui/material";
+import {
+    Alert,
+    Box,
+    Button,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+    TextField,
+    Typography
+} from "@mui/material";
 import {ManualResearch} from './ManualResearch';
 import {LibraryDocumentInterface} from "../../types";
 import {useSearchStore} from "../../stores/searchStore";
@@ -55,7 +65,12 @@ export const NotFoundItem: React.FC<NotFoundItemProps> = ({identifiers}) => {
                     {isValid && (<Alert severity="error">
                         Ce document est déjà dans vos documents recherchés.
                     </Alert>)}
-                    <ManualResearch callback={selectDocument}/>
+
+                    <ManualResearch callback={selectDocument}
+                                    renderInput={params =>
+                                        <TextField {...params} label="Titre, Auteur, édition, ..." fullWidth
+                                                   variant="standard"/>}
+                    />
                 </Box>
             </DialogContent>
             <DialogActions>

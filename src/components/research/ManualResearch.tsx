@@ -1,17 +1,17 @@
 import React from 'react';
-import TextField from '@mui/material/TextField';
-import Autocomplete from '@mui/material/Autocomplete';
 import {debounce} from '@mui/material/utils';
 import {searchBNFDocument} from "../../utils/libraryDocumentUtils";
 import {LibraryDocumentInterface} from "../../types";
-import {ListItem} from "@mui/material";
+import {Autocomplete, AutocompleteProps, ListItem, SxProps, Theme} from "@mui/material";
 import {DocumentItem} from "../DocumentItem";
 
 interface ManualResearchProps {
     callback: (value: LibraryDocumentInterface | null) => void;
+    containerStyles?: SxProps<Theme>;
+    renderInput: AutocompleteProps<never, never, never, never, never>['renderInput'];
 }
 
-export const ManualResearch: React.FC<ManualResearchProps> = ({callback}) => {
+export const ManualResearch: React.FC<ManualResearchProps> = ({callback, containerStyles = {}, renderInput}) => {
     const [value, setValue] = React.useState<LibraryDocumentInterface | null>(null);
     const [inputValue, setInputValue] = React.useState('');
     const [options, setOptions] = React.useState<readonly LibraryDocumentInterface[]>([]);
@@ -59,12 +59,14 @@ export const ManualResearch: React.FC<ManualResearchProps> = ({callback}) => {
 
     return (
         <Autocomplete
+            sx={containerStyles}
             getOptionLabel={option =>
                 typeof option === 'string' ? option : option.title
             }
             filterOptions={x => x}
             options={options}
             autoComplete
+            fullWidth
             includeInputInList
             filterSelectedOptions
             value={value}
@@ -76,11 +78,8 @@ export const ManualResearch: React.FC<ManualResearchProps> = ({callback}) => {
             }}
             onInputChange={(_event, newInputValue) => {
                 setInputValue(newInputValue);
-                // callback(newInputValue)
             }}
-            renderInput={params => (
-                <TextField {...params} label="Titre, Auteur, édition, ..." fullWidth variant="standard"/>
-            )}
+            renderInput={renderInput}
             renderOption={(props, option) => {
                 const {key, ...optionProps} = props
 
