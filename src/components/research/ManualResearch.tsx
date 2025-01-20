@@ -13,6 +13,7 @@ interface ManualResearchProps {
 
 export const ManualResearch: React.FC<ManualResearchProps> = ({callback, containerStyles = {}, renderInput}) => {
     const [value, setValue] = React.useState<LibraryDocumentInterface | null>(null);
+    const [loading, setLoading] = React.useState<boolean>(false);
     const [inputValue, setInputValue] = React.useState('');
     const [options, setOptions] = React.useState<readonly LibraryDocumentInterface[]>([]);
 
@@ -36,6 +37,8 @@ export const ManualResearch: React.FC<ManualResearchProps> = ({callback, contain
             return undefined;
         }
 
+        setLoading(true);
+
         fetch(inputValue, results => {
             if (active) {
                 let newOptions: readonly LibraryDocumentInterface[] = [];
@@ -49,6 +52,7 @@ export const ManualResearch: React.FC<ManualResearchProps> = ({callback, contain
                 }
 
                 setOptions(newOptions);
+                setLoading(false);
             }
         });
 
@@ -59,6 +63,8 @@ export const ManualResearch: React.FC<ManualResearchProps> = ({callback, contain
 
     return (
         <Autocomplete
+            loading={loading}
+            loadingText={"Recherche en cours..."}
             sx={containerStyles}
             getOptionLabel={option =>
                 typeof option === 'string' ? option : option.title
