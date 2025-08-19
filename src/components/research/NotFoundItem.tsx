@@ -59,7 +59,7 @@ export const NotFoundItem: React.FC<NotFoundItemProps> = ({identifiers}) => {
             Rechercher
         </Button>
         <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
-            <DialogTitle>Recherche manuelle</DialogTitle>
+            <DialogTitle>Recherche élargie</DialogTitle>
             <DialogContent>
                 <Box sx={{gap: 2, display: 'flex', flexDirection: 'column'}}>
                     {isValid && (<Alert severity="error">
