@@ -40,8 +40,7 @@ export const searchBNFDocument = async (query: string): Promise<LibraryDocumentI
     const bnfApiUrl = new URL(`${process.env.REACT_APP_BNF_URL}/api/SRU`)
     bnfApiUrl.searchParams.set("version", "1.2");
     bnfApiUrl.searchParams.set("operation", "searchRetrieve");
-    bnfApiUrl.searchParams.set("query", `bib.anywhere all "${query}"`);
-    // noinspection SpellCheckingInspection
+    bnfApiUrl.searchParams.set("query", `bib.anywhere all "${query}" and bib.doctype any "a"`);
     bnfApiUrl.searchParams.set("recordSchema", "intermarcXchange");
 
     const response = await axios.get(bnfApiUrl.toString());
@@ -61,7 +60,6 @@ export const searchBNFDocument = async (query: string): Promise<LibraryDocumentI
         const title = recordDatum.findDataField(dataField => dataField['mxc:datafield'].tag === '245')?.getSubFieldValue('a') as string;
         const encodedData = recordDatum.findControlField(dataField => dataField['mxc:controlfield'].tag === '009')?.["mxc:controlfield"].content as string;
         const document = new LibraryDocument(title, DocumentTypeConverter.convert(encodedData?.at(4) ?? DocumentType.Other));
-
 
         dataFields.filter(dataField => dataField["mxc:datafield"].tag.startsWith('7') || dataField["mxc:datafield"].tag.startsWith('1'))
             .forEach(dataField => {
@@ -176,7 +174,7 @@ export const searchBNFDocument = async (query: string): Promise<LibraryDocumentI
         document.subtitle = recordDatum.findDataField(dataField => dataField['mxc:datafield'].tag === '245')?.getSubFieldValue('e', true) ?? null;
         document.partNumber = recordDatum.findDataField(dataField => dataField['mxc:datafield'].tag === '245')?.getSubFieldValue('h', true) ?? null;
         document.partTitle = recordDatum.findDataField(dataField => dataField['mxc:datafield'].tag === '245')?.getSubFieldValue('i', true) ?? null;
-        document.edition = recordDatum.findDataField(dataField => dataField['mxc:datafield'].tag === '250')?.getSubFieldValue('a') ?? null;
+        document.edition = recordDatum.findDataField(dataField => dataField['mxc:datafield'].tag === '250')?.getSubFieldValue('a', true) ?? null;
         document.issn = recordDatum.findDataField(dataField => dataField['mxc:datafield'].tag === '022')?.getSubFieldValue('a', true) ?? null;
         document.periodicity = recordDatum.findDataField(dataField => dataField['mxc:datafield'].tag === '326')?.getSubFieldValue('a', true) ?? null;
         document.notes = recordDatum.findDataField(dataField => dataField['mxc:datafield'].tag === '300')?.getSubFieldValue('a') ?? null;
