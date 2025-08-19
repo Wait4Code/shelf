@@ -97,6 +97,7 @@ export const useSearchStore = create<ResearchStore>((set, get) => ({
                 const idx = state.researches.findIndex(item => research.identifiers === item.identifiers);
                 state.researches[idx].status = ResearchStatus.Error;
 
+                console.warn(error);
                 return {researches: [...state.researches]};
             });
         }

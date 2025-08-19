@@ -20,7 +20,7 @@ export interface LibraryDocumentInterface {
     internationalSerialBookNumbers: Isbn[];
     europeanArticleNumbers: Ean[]
     issn: string | null;
-    numbering: number | null;
+    numbering: string | null;
     periodicity: string | null;
     blurb: Blurb | null;
     publication: Publication | null;
@@ -31,7 +31,7 @@ export interface LibraryDocumentInterface {
     notes: string | null;
     recordIdentifier: string | null;
     arkIdentifier: string | null;
-    type: typeof DocumentType[keyof typeof DocumentType];
+    type: DocumentType;
     partNumber: string | null;
     partTitle: string | null
 
@@ -41,6 +41,7 @@ export interface LibraryDocumentInterface {
 }
 
 export class LibraryDocument implements LibraryDocumentInterface {
+    title: string;
     arkIdentifier: string | null = null;
     blurb: Blurb | null = null;
     collection: Collection | null = null;
@@ -52,7 +53,7 @@ export class LibraryDocument implements LibraryDocumentInterface {
     internationalSerialBookNumbers: Isbn[] = [];
     issn: string | null = null;
     notes: string | null = null;
-    numbering: number | null = null;
+    numbering: string | null = null;
     periodicity: string | null = null;
     physicalDescription: string | null = null;
     publication: Publication | null = null;
@@ -60,12 +61,11 @@ export class LibraryDocument implements LibraryDocumentInterface {
     series: Series | null = null;
     subjects: Subject[] = [];
     subtitle: string | null = null;
-    title: string;
-    type: typeof DocumentType[keyof typeof DocumentType];
+    type: DocumentType;
     partNumber: string | null = null;
     partTitle: string | null = null
 
-    constructor(title: string, type: typeof DocumentType[keyof typeof DocumentType]) {
+    constructor(title: string, type: DocumentType) {
         this.title = title;
         this.type = type
     }

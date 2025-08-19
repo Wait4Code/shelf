@@ -8,3 +8,4 @@ export * from "./Series";
 export * from "./Subject";
 export * from "./Ean";
 export * from "./Isbn";
+export * from "./DocumentType";
