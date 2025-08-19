@@ -9,14 +9,12 @@ interface BookItemProps {
 export const BookItem: React.FC<BookItemProps> = ({ document }) => {
     return (
         <Card style={{ display: 'flex', marginBottom: 16 }}>
-            {document.coverImageUrl && (
-                <CardMedia
-                    component="img"
-                    style={{ width: 151 }}
-                    image={document.coverImageUrl}
-                    alt={document.title}
-                />
-            )}
+            <CardMedia
+                component="img"
+                style={{ width: 151 }}
+                image={document.coverImageUrl || process.env.REACT_APP_FALLBACK_COVER_URL}
+                alt={document.title}
+            />
             <CardContent>
                 <Typography variant="h5">{document.title}</Typography>
                 {/*<Typography variant="subtitle1" color="textSecondary">*/}

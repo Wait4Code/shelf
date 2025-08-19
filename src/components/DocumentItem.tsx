@@ -34,9 +34,11 @@ export const DocumentItem: React.FC<DocumentItemProps> = ({ document }) => {
     return (
         <Box sx={useStyles.bookDetails}>
             <Box sx={useStyles.thumbnailContainer}>
-                {document.coverImageUrl &&
-                    <img src={document.coverImageUrl} alt="Couverture" style={useStyles.thumbnail} />
-                }
+                <img
+                    src={document.coverImageUrl || process.env.REACT_APP_FALLBACK_COVER_URL}
+                    alt="Couverture"
+                    style={useStyles.thumbnail}
+                />
             </Box>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                 <DocumentTitle document={document} />
