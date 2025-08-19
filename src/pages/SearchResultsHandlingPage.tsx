@@ -11,7 +11,7 @@ const useStyles = {
     container: {},
 
     appbar: {
-        zIndex: 10000,
+        zIndex: 1000,
     },
     toolbar: {
         display: 'flex',

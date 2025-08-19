@@ -26,7 +26,7 @@ export const NavigationBar: React.FC = () => {
     const routeMatch = useRouteMatch([Routes.research, Routes.shoppingCart, Routes.loans, Routes.home]);
     const currentTab = routeMatch?.pattern?.path;
     return (
-        <Paper sx={{position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 10000}} elevation={3}>
+        <Paper sx={{position: 'fixed', bottom: 0, left: 0, right: 0, zIndex: 1000}} elevation={3}>
             <BottomNavigation showLabels value={currentTab}>
                 <BottomNavigationAction label="Bibliothèque" icon={<LibraryBooksIcon/>} to={Routes.library}
                                         value={Routes.home} component={NavLink}/>

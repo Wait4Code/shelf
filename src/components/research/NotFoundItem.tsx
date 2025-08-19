@@ -21,11 +21,11 @@ interface NotFoundItemProps {
 
 export const NotFoundItem: React.FC<NotFoundItemProps> = ({identifiers}) => {
     const [open, setOpen] = React.useState(false);
-    const [isValid, setIsValid] = React.useState(false);
+    const [isInvalid, setIsInvalid] = React.useState(false);
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
     const [document, setDocument] = React.useState<LibraryDocumentInterface | null>(null);
-    const {addDocumentsToResearch, hasAnyIdentifier} = useSearchStore();
+    const {addDocumentsToResearch, hasAnyIdentifierWithDocuments} = useSearchStore();
 
     const cancel = () => {
         selectDocument(null);
@@ -33,13 +33,14 @@ export const NotFoundItem: React.FC<NotFoundItemProps> = ({identifiers}) => {
     }
 
     const selectDocument = (selectedDocument: LibraryDocumentInterface | null) => {
-        setIsValid(false);
+        console.log(selectedDocument,identifiers);
+        setIsInvalid(false);
         setDocument(selectedDocument);
         if (!selectedDocument) {
             return;
         }
-        if (hasAnyIdentifier(...selectedDocument.getIdentifiers())) {
-            setIsValid(true);
+        if (hasAnyIdentifierWithDocuments(...selectedDocument.getIdentifiers())) {
+            setIsInvalid(true);
         }
     }
 
@@ -62,7 +63,7 @@ export const NotFoundItem: React.FC<NotFoundItemProps> = ({identifiers}) => {
             <DialogTitle>Recherche élargie</DialogTitle>
             <DialogContent>
                 <Box sx={{gap: 2, display: 'flex', flexDirection: 'column'}}>
-                    {isValid && (<Alert severity="error">
+                    {isInvalid && (<Alert severity="error">
                         Ce document est déjà dans vos documents recherchés.
                     </Alert>)}
 
@@ -75,7 +76,7 @@ export const NotFoundItem: React.FC<NotFoundItemProps> = ({identifiers}) => {
             </DialogContent>
             <DialogActions>
                 <Button onClick={cancel}>Annuler</Button>
-                <Button onClick={validateManualResearch} disabled={isValid}>Valider</Button>
+                <Button onClick={validateManualResearch} disabled={isInvalid}>Valider</Button>
             </DialogActions>
         </Dialog>
     </>

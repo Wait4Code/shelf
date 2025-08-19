@@ -26,6 +26,7 @@ interface ResearchStore {
     clear: VoidFunction,
     hasIdentifier: HasIdentifierFunction,
     hasAnyIdentifier: HasAnyIdentifierFunction,
+    hasAnyIdentifierWithDocuments: HasAnyIdentifierFunction,
     count: CountFunction
 }
 
@@ -105,6 +106,7 @@ export const useSearchStore = create<ResearchStore>((set, get) => ({
 
     },
     addLibraryDocument: async (document: LibraryDocumentInterface) => {
+        // on ajoute une nouvelle recherche
         if (get().hasAnyIdentifier(...document.getIdentifiers())) {
             return;
         }
@@ -118,15 +120,18 @@ export const useSearchStore = create<ResearchStore>((set, get) => ({
         set(state => ({researches: [...state.researches, research]}));
     },
     addDocumentsToResearch: async (identifiers, ...documents) => {
+        // on ajoute des documents à une recherche existante
         if (!get().hasAnyIdentifier(...identifiers)) {
             return;
         }
+
 
         set(addDocument(identifiers, documents))
     },
     clear: () => set({researches: []}),
     hasIdentifier: identifier => Boolean(get().researches.find(item => item.identifiers.includes(identifier))),
     hasAnyIdentifier: (...identifiers) => Boolean(get().researches.find(item => intersection(item.identifiers, identifiers).length)),
+    hasAnyIdentifierWithDocuments: (...identifiers) => Boolean(get().researches.find(item => intersection(item.identifiers, identifiers).length && item.documents.length > 0)),
     count: () => get().researches.length,
 }));
 

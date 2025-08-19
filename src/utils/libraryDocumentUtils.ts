@@ -16,6 +16,7 @@ import {
 import { BNFResponse, DataFieldInterface, RecordDatum } from "../types/BnfSchema";
 import he from 'he';
 import { has } from "lodash";
+import { Nullable } from './Nullable';
 
 
 function getSubFieldValue(dataField: DataFieldInterface, code: string): string;
@@ -111,15 +112,27 @@ export const searchBNFDocument = async (query: string): Promise<LibraryDocumentI
             })).pop() ?? null;
 
 
-        document.collection = dataFields
+        const collection = dataFields
             .filter(dataField => dataField["mxc:datafield"].tag === "410")
-            .map((dataField): Collection => ({
-                title: getSubFieldValue(dataField, 't'),
+            .map((dataField): Nullable<Collection> => ({
+                title: getSubFieldValue(dataField, 't', true),
                 number: getSubFieldValue(dataField, 'v', true, "number"),
-                publicationDate: getSubFieldValue(dataField, 'd', true),
                 issn: getSubFieldValue(dataField, 'x', true),
                 recordNumber: getSubFieldValue(dataField, '3', true),
             })).pop() ?? null;
+
+        document.collection = dataFields
+        .filter(dataField => dataField["mxc:datafield"].tag === "295")
+        .map((dataField): Collection => {
+            return ({
+                title: collection?.title ?? getSubFieldValue(dataField, 'a'),
+                number: collection?.number ?? getSubFieldValue(dataField, 'v', true, "number"),
+                issn: collection?.issn ?? getSubFieldValue(dataField, 'x', true),
+                recordNumber: collection?.recordNumber ?? null
+            });
+        }).pop() ?? null;;
+
+
 
         document.series = dataFields
             .filter(dataField => dataField["mxc:datafield"].tag === "460")

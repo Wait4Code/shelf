@@ -1,9 +1,31 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import {debounce} from '@mui/material/utils';
 import {searchBNFDocument} from "../../utils/libraryDocumentUtils";
 import {LibraryDocumentInterface} from "../../types";
-import {Autocomplete, AutocompleteProps, ListItem, SxProps, Theme} from "@mui/material";
+import {
+    Autocomplete,
+    AutocompleteProps,
+    Button,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogContentText,
+    DialogTitle,
+    ListItem,
+    SxProps,
+    Theme
+} from "@mui/material";
 import {DocumentItem} from "../DocumentItem";
+import {LibraryDocumentForm, LibraryDocumentFormRef} from "../form/LibraryDocumentForm";
+
+
+class CreatableOption {
+    readonly title: string;
+
+    constructor(title: string) {
+        this.title = title;
+    }
+}
 
 interface ManualResearchProps {
     callback: (value: LibraryDocumentInterface | null) => void;
@@ -15,8 +37,31 @@ export const ManualResearch: React.FC<ManualResearchProps> = ({callback, contain
     const [value, setValue] = React.useState<LibraryDocumentInterface | null>(null);
     const [loading, setLoading] = React.useState<boolean>(false);
     const [inputValue, setInputValue] = React.useState('');
-    const [options, setOptions] = React.useState<readonly LibraryDocumentInterface[]>([]);
+    const [options, setOptions] = React.useState<readonly (LibraryDocumentInterface | CreatableOption)[]>([]);
+    const [open, setOpen] = React.useState<boolean>(false);
+    
+    // Ref pour le formulaire
+    const formRef = useRef<LibraryDocumentFormRef>(null);
 
+    const handleClose = () => {
+        setOpen(false);
+    }
+
+    const handleFormSubmit = (formValues: LibraryDocumentInterface) => {
+        setOptions([...options, formValues]);
+        setValue(formValues);
+
+        // Appeler le callback avec les valeurs du formulaire
+        callback(formValues);
+        handleClose();
+    }
+
+    const handleManualSubmit = () => {
+        // Déclencher la soumission du formulaire via la ref
+        if (formRef.current) {
+            formRef.current.submitForm();
+        }
+    }
 
     const fetch = React.useMemo(() =>
             debounce(
@@ -62,40 +107,88 @@ export const ManualResearch: React.FC<ManualResearchProps> = ({callback, contain
     }, [value, inputValue, fetch]);
 
     return (
-        <Autocomplete
-            loading={loading}
-            loadingText={"Recherche en cours..."}
-            sx={containerStyles}
-            getOptionLabel={option =>
-                typeof option === 'string' ? option : option.title
-            }
-            filterOptions={x => x}
-            options={options}
-            autoComplete
-            fullWidth
-            includeInputInList
-            filterSelectedOptions
-            value={value}
-            noOptionsText="Aucun résultat"
-            onChange={(_event, newValue: LibraryDocumentInterface | null) => {
-                setOptions(newValue ? [newValue, ...options] : options);
-                setValue(newValue);
-                callback(newValue);
-            }}
-            onInputChange={(_event, newInputValue) => {
-                setInputValue(newInputValue);
-            }}
-            renderInput={renderInput}
-            renderOption={(props, option) => {
-                const {key, ...optionProps} = props
+        <>
+            <Autocomplete
+                loading={loading}
+                loadingText={"Recherche en cours..."}
+                sx={containerStyles}
+                getOptionLabel={option =>
+                    typeof option === 'string' ? option : option.title
+                }
+                filterOptions={(currentOptions, params) => {
+                    if (params.inputValue !== '' && !loading) {
+                        currentOptions.push(new CreatableOption(params.inputValue));
+                    }
 
-                return (
-                    <ListItem key={option.arkIdentifier} {...optionProps} sx={{cursor: 'pointer'}}>
-                        <DocumentItem document={option}/>
-                    </ListItem>
+                    return currentOptions;
+                }}
+                options={options}
+                autoComplete
+                fullWidth
+                includeInputInList
+                filterSelectedOptions
+                value={value}
+                noOptionsText="Aucun résultat"
+                onChange={(_event, newValue: LibraryDocumentInterface | CreatableOption | null) => {
+                    if (newValue instanceof CreatableOption) {
+                        setTimeout(() => {
+                            setOpen(true);
+                        })
+                        return;
+                    }
 
-                );
-            }}
-        />
+                    setOptions(newValue ? [newValue, ...options] : options);
+                    setValue(newValue);
+                    callback(newValue);
+                }}
+                onInputChange={(_event, newInputValue) => {
+                    setInputValue(newInputValue);
+                }}
+                renderInput={renderInput}
+                renderOption={(props, option) => {
+                    const {key, ...optionProps} = props
+
+                    if (option instanceof CreatableOption) {
+                        return <ListItem {...optionProps} key={"creatable"}>
+                            Saisir manuellement "{option.title}"
+                        </ListItem>
+                    }
+
+                    return (
+                        <ListItem {...optionProps} key={option.arkIdentifier}>
+                            <DocumentItem document={option}/>
+                        </ListItem>
+
+                    );
+                }}
+            />
+            <Dialog open={open} onClose={handleClose} fullWidth maxWidth="md" scroll="body">
+                <DialogTitle>Saisie manuelle</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        Le document n'est pas référencé à la BNF ? Saisissez-le manuellement !
+                    </DialogContentText>
+                    <LibraryDocumentForm
+                        visibleFields={[
+                            'title',
+                            'subtitle',
+                            'contributors', 'contributors.lastName', 'contributors.firstName',
+                            'publication',
+                            'series', 'series.title', 'series.number',
+                            'internationalSerialBookNumbers', 'internationalSerialBookNumbers.number',
+                            'europeanArticleNumbers', 'europeanArticleNumbers.number',
+                        ]}
+                        onSubmit={handleFormSubmit}
+                        ref={formRef}
+                    />
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleClose}>Annuler</Button>
+                    <Button onClick={handleManualSubmit} variant="contained" color="primary">
+                        Ajouter
+                    </Button>
+                </DialogActions>
+            </Dialog>
+        </>
     );
 }
