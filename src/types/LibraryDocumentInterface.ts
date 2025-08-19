@@ -66,6 +66,12 @@ export class LibraryDocument implements LibraryDocumentInterface {
     partTitle: string | null = null
 
     constructor(title: string, type: DocumentType) {
+        if(!title){
+            throw new Error('LibraryDocument title must be a non empty string');
+        }
+        if(!Object.values(DocumentType).includes(type)){
+            throw new Error('LibraryDocument type must be a DocumentType');
+        }
         this.title = title;
         this.type = type
     }
