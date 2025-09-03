@@ -1,6 +1,7 @@
 // src/stores/searchStore.ts
 import {create} from 'zustand';
-import {LibraryDocumentInterface} from "../types";
+import {persist} from 'zustand/middleware';
+import {LibraryDocumentInterface, LibraryDocument} from "../types";
 import {searchBNFDocument} from "../utils/libraryDocumentUtils";
 import {flatten, intersection} from "lodash";
 
@@ -24,6 +25,7 @@ interface ResearchStore {
     addLibraryDocument: AddLibraryDocumentFunction,
     addDocumentsToResearch: addDocumentsToResearchFunction
     clear: VoidFunction,
+    removeResearch: RemoveResearchFunction,
     hasIdentifier: HasIdentifierFunction,
     hasAnyIdentifier: HasAnyIdentifierFunction,
     hasAnyIdentifierWithDocuments: HasAnyIdentifierFunction,
@@ -70,12 +72,24 @@ class CompetingDocuments extends Array<LibraryDocumentInterface> implements Comp
 type ResearchFunction = (barcode: string) => Promise<void>;
 type AddLibraryDocumentFunction = (document: LibraryDocumentInterface) => Promise<void>;
 type addDocumentsToResearchFunction = (identifiers: Array<string>, ...documents: LibraryDocumentInterface[]) => Promise<void>;
+type RemoveResearchFunction = (identifiers: Array<string>) => void;
 type HasIdentifierFunction = (identifier: string) => boolean;
 type HasAnyIdentifierFunction = (...identifiers: string[]) => boolean;
 type CountFunction = () => number;
 
+// Fonction pour réhydrater les documents depuis le localStorage
+const rehydrateDocuments = (researches: Array<LibraryDocumentResearch>): Array<LibraryDocumentResearch> => {
+    return researches.map(research => ({
+        ...research,
+        documents: new CompetingDocuments(
+            ...research.documents.map(doc => LibraryDocument.fromJson(doc))
+        )
+    }));
+};
 
-export const useSearchStore = create<ResearchStore>((set, get) => ({
+export const useSearchStore = create<ResearchStore>()(
+    persist(
+        (set, get) => ({
     researches: [],
     research: async (barcode: string) => {
         if (get().hasIdentifier(barcode)) {
@@ -129,11 +143,29 @@ export const useSearchStore = create<ResearchStore>((set, get) => ({
         set(addDocument(identifiers, documents))
     },
     clear: () => set({researches: []}),
+    removeResearch: (identifiers: Array<string>) => {
+        set(state => ({
+            researches: state.researches.filter(research => 
+                !research.identifiers.some(id => identifiers.includes(id))
+            )
+        }));
+    },
     hasIdentifier: identifier => Boolean(get().researches.find(item => item.identifiers.includes(identifier))),
     hasAnyIdentifier: (...identifiers) => Boolean(get().researches.find(item => intersection(item.identifiers, identifiers).length)),
     hasAnyIdentifierWithDocuments: (...identifiers) => Boolean(get().researches.find(item => intersection(item.identifiers, identifiers).length && item.documents.length > 0)),
     count: () => get().researches.length,
-}));
+        }),
+        {
+            name: 'search-store',
+            partialize: (state) => ({ researches: state.researches }),
+            onRehydrateStorage: () => (state) => {
+                if (state) {
+                    state.researches = rehydrateDocuments(state.researches);
+                }
+            },
+        }
+    )
+);
 
 const addDocument = (identifiers: Array<string>, documents: Array<LibraryDocumentInterface>) => (state: ResearchStore) => {
     const idx = state.researches.findIndex(item => identifiers === item.identifiers);

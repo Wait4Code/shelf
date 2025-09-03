@@ -1,6 +1,7 @@
 // src/pages/SearchResultsHandlingPage.tsx
 import React, {useContext, useEffect} from 'react';
-import {Box, Button, CircularProgress, List, ListItem, Typography} from '@mui/material';
+import {Box, Button, CircularProgress, List, ListItem, Typography, IconButton} from '@mui/material';
+import DeleteIcon from '@mui/icons-material/Delete';
 import {ResearchStatus, useSearchStore} from '../stores/searchStore';
 import {LibraryDocumentInterface} from "../types";
 import {ResearchItem} from "../components/ResearchItem";
@@ -23,6 +24,14 @@ const useStyles = {
         display: 'flex',
         justifyContent: 'center',
     },
+    listItem: {
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
+    researchContent: {
+        flexGrow: 1,
+    },
 };
 
 
@@ -30,6 +39,7 @@ export const SearchResultsHandlingPage: React.FC = () => {
     const [selectedDocuments, setSelectedDocuments] = React.useState<{ [k: string]: LibraryDocumentInterface }>({});
     const researches = useSearchStore(state => state.researches);
     const clearScans = useSearchStore(state => state.clear);
+    const removeResearch = useSearchStore(state => state.removeResearch);
     const {setHeaderStyles, setToolbarStyles, setContent} = useContext(HeaderContext);
     useEffect(() => {
         setHeaderStyles(useStyles.appbar);
@@ -62,20 +72,39 @@ export const SearchResultsHandlingPage: React.FC = () => {
         // navigate('/');
     };
 
+    const handleRemoveResearch = (identifiers: Array<string>) => {
+        removeResearch(identifiers);
+        // Supprimer aussi de la sélection si elle était sélectionnée
+        const key = identifiers.join('-');
+        if (selectedDocuments[key]) {
+            delete selectedDocuments[key];
+            setSelectedDocuments({...selectedDocuments});
+        }
+    };
+
     return (
         <Box>
             <Box sx={useStyles.container}>
                 <List>
                     {researches.map(({documents, status, identifiers}) => (
-                        <ListItem key={identifiers.join('-')} divider>
-                            {status === ResearchStatus.Pending && <CircularProgress/>}
-                            {status === ResearchStatus.Error && (
-                                <Typography color="error">Erreur lors de la recherche</Typography>
-                            )}
-                            {status === ResearchStatus.Success &&
-                                <ResearchItem documents={documents} identifiers={identifiers}
-                                              onSelected={selectDocument}/>
-                            }
+                        <ListItem key={identifiers.join('-')} divider sx={useStyles.listItem}>
+                            <Box sx={useStyles.researchContent}>
+                                {status === ResearchStatus.Pending && <CircularProgress/>}
+                                {status === ResearchStatus.Error && (
+                                    <Typography color="error">Erreur lors de la recherche</Typography>
+                                )}
+                                {status === ResearchStatus.Success &&
+                                    <ResearchItem documents={documents} identifiers={identifiers}
+                                                  onSelected={selectDocument}/>
+                                }
+                            </Box>
+                            <IconButton 
+                                color="error" 
+                                onClick={() => handleRemoveResearch(identifiers)}
+                                aria-label="Supprimer cette recherche"
+                            >
+                                <DeleteIcon />
+                            </IconButton>
                         </ListItem>
                     ))}
                 </List>
