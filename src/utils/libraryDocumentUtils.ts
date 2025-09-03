@@ -62,7 +62,10 @@ export const searchBNFDocument = async (query: string): Promise<LibraryDocumentI
         const encodedData = recordDatum.findControlField(dataField => dataField['mxc:controlfield'].tag === '009')?.["mxc:controlfield"].content as string;
         const document = new LibraryDocument(title, DocumentTypeConverter.convert(encodedData?.at(4) ?? DocumentType.Other));
 
-        dataFields.filter(dataField => dataField["mxc:datafield"].tag.startsWith('7') || dataField["mxc:datafield"].tag.startsWith('1'))
+
+        const CONTRIBUTORS_TAGS = ['100','101','110','111','700', '701', '702', '703', '710', '711', '712', '713'];
+
+        dataFields.filter(dataField => CONTRIBUTORS_TAGS.includes(dataField["mxc:datafield"].tag))
             .forEach(dataField => {
                 try {
                     document.contributors.push({
