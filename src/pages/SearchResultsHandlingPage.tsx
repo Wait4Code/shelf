@@ -3,6 +3,7 @@ import React, {useContext, useEffect} from 'react';
 import {Box, Button, CircularProgress, List, ListItem, Typography, IconButton} from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import {ResearchStatus, useSearchStore} from '../stores/searchStore';
+import {useBookStore} from '../stores/bookStore';
 import {LibraryDocumentInterface} from "../types";
 import {ResearchItem} from "../components/ResearchItem";
 import {HeaderContext} from '../stores/header';
@@ -38,8 +39,8 @@ const useStyles = {
 export const SearchResultsHandlingPage: React.FC = () => {
     const [selectedDocuments, setSelectedDocuments] = React.useState<{ [k: string]: LibraryDocumentInterface }>({});
     const researches = useSearchStore(state => state.researches);
-    const clearScans = useSearchStore(state => state.clear);
     const removeResearch = useSearchStore(state => state.removeResearch);
+    const addDocument = useBookStore(state => state.addDocument);
     const {setHeaderStyles, setToolbarStyles, setContent} = useContext(HeaderContext);
     useEffect(() => {
         setHeaderStyles(useStyles.appbar);
@@ -67,9 +68,26 @@ export const SearchResultsHandlingPage: React.FC = () => {
     }
 
     const handleAddToLibrary = () => {
-        console.log(Object.values(selectedDocuments));
-        // clearScans();
-        // navigate('/');
+        const selectedDocs = Object.values(selectedDocuments);
+        
+        if (selectedDocs.length === 0) {
+            return; // Aucun document sélectionné
+        }
+
+        // Ajouter chaque document sélectionné au bookstore
+        selectedDocs.forEach(document => {
+            addDocument(document);
+        });
+
+        // Grouper les identifiants par recherche pour les supprimer correctement
+        const researchKeys = Object.keys(selectedDocuments);
+        researchKeys.forEach(key => {
+            const identifiers = key.split('-');
+            removeResearch(identifiers);
+        });
+
+        // Vider la sélection
+        setSelectedDocuments({});
     };
 
     const handleRemoveResearch = (identifiers: Array<string>) => {
@@ -108,8 +126,13 @@ export const SearchResultsHandlingPage: React.FC = () => {
                         </ListItem>
                     ))}
                 </List>
-                <Button variant="contained" color="primary" onClick={handleAddToLibrary}>
-                    Ajouter à la bibliothèque
+                <Button 
+                    variant="contained" 
+                    color="primary" 
+                    onClick={handleAddToLibrary}
+                    disabled={Object.keys(selectedDocuments).length === 0}
+                >
+                    Ajouter à la bibliothèque {Object.keys(selectedDocuments).length > 0 && `(${Object.keys(selectedDocuments).length})`}
                 </Button>
             </Box>
         </Box>
