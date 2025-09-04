@@ -22,6 +22,7 @@ interface LibraryDocumentResearch {
 interface ResearchStore {
     researches: Array<LibraryDocumentResearch>
     research: ResearchFunction,
+    refresh: ResearchFunction,
     addLibraryDocument: AddLibraryDocumentFunction,
     addDocumentsToResearch: addDocumentsToResearchFunction
     clear: VoidFunction,
@@ -119,6 +120,51 @@ export const useSearchStore = create<ResearchStore>()(
 
 
     },
+    refresh: async (barcode: string) => {
+        // Trouver la recherche existante
+        const existingResearchIndex = get().researches.findIndex(research => research.identifiers.includes(barcode));
+        
+        if (existingResearchIndex === -1) {
+            // Si la recherche n'existe pas, utiliser la fonction research normale
+            return get().research(barcode);
+        }
+
+        // Mettre à jour le statut en Pending pour indiquer le refresh
+        set(state => {
+            const newResearches = [...state.researches];
+            newResearches[existingResearchIndex] = {
+                ...newResearches[existingResearchIndex],
+                status: ResearchStatus.Pending
+            };
+            return { researches: newResearches };
+        });
+
+        try {
+            const documents = await searchBNFDocument(barcode);
+            // Écraser les documents avec les nouvelles données
+            set(state => {
+                const newResearches = [...state.researches];
+                newResearches[existingResearchIndex] = {
+                    ...newResearches[existingResearchIndex],
+                    status: ResearchStatus.Success,
+                    documents: new CompetingDocuments(...documents)
+                };
+                return { researches: newResearches };
+            });
+        } catch (error) {
+            // En cas d'erreur, mettre à jour le statut en Error et vider les documents
+            set(state => {
+                const newResearches = [...state.researches];
+                newResearches[existingResearchIndex] = {
+                    ...newResearches[existingResearchIndex],
+                    status: ResearchStatus.Error,
+                    documents: new CompetingDocuments() // Vider les documents en cas d'erreur
+                };
+                return { researches: newResearches };
+            });
+            console.warn(error);
+        }
+    },
     addLibraryDocument: async (document: LibraryDocumentInterface) => {
         // on ajoute une nouvelle recherche
         if (get().hasAnyIdentifier(...document.getIdentifiers())) {
@@ -161,6 +207,18 @@ export const useSearchStore = create<ResearchStore>()(
             onRehydrateStorage: () => (state) => {
                 if (state) {
                     state.researches = rehydrateDocuments(state.researches);
+                    
+                    // Rafraîchir automatiquement TOUTES les recherches pour avoir des données fraîches
+                    state.researches.forEach(research => {
+                        // Rafraîchir la recherche avec le premier identifiant
+                        const firstIdentifier = research.identifiers[0];
+                        if (firstIdentifier) {
+                            // Utiliser setTimeout pour éviter les problèmes de timing avec la réhydratation
+                            setTimeout(() => {
+                                state.refresh(firstIdentifier);
+                            }, 100);
+                        }
+                    });
                 }
             },
         }

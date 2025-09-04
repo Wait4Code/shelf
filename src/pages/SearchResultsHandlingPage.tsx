@@ -118,14 +118,15 @@ export const SearchResultsHandlingPage: React.FC = () => {
                     {researches.map(({documents, status, identifiers}) => (
                         <ListItem key={identifiers.join('-')} divider sx={useStyles.listItem}>
                             <Box sx={useStyles.researchContent}>
-                                {status === ResearchStatus.Pending && <CircularProgress/>}
+                                {status === ResearchStatus.Pending && documents.length === 0 && <CircularProgress/>}
                                 {status === ResearchStatus.Error && (
                                     <Typography color="error">Erreur lors de la recherche</Typography>
                                 )}
-                                {status === ResearchStatus.Success &&
+                                {(status === ResearchStatus.Success || (status === ResearchStatus.Pending && documents.length > 0)) &&
                                     <ResearchItem documents={documents} identifiers={identifiers}
                                                   onSelected={selectDocument}
-                                                  isDocumentAlreadyInLibrary={isDocumentAlreadyInLibrary}/>
+                                                  isDocumentAlreadyInLibrary={isDocumentAlreadyInLibrary}
+                                                  isRefreshing={status === ResearchStatus.Pending && documents.length > 0}/>
                                 }
                             </Box>
                             <IconButton 

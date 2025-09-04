@@ -1,6 +1,6 @@
 import React, {ChangeEvent} from 'react';
 import {CompetingDocumentsInterface} from "../stores/searchStore";
-import {Box, Checkbox, Radio, RadioGroup, Chip} from "@mui/material";
+import {Box, Checkbox, Radio, RadioGroup, Chip, CircularProgress} from "@mui/material";
 import {DocumentItem} from "./DocumentItem";
 import {LibraryDocumentInterface} from "../types";
 import {NotFoundItem} from "./research/NotFoundItem";
@@ -10,6 +10,7 @@ type ResearchItemProps = {
     identifiers: Array<string>;
     onSelected: (identifiers: Array<string>, document: LibraryDocumentInterface | null) => void;
     isDocumentAlreadyInLibrary: (document: LibraryDocumentInterface) => boolean;
+    isRefreshing?: boolean;
 };
 
 const useStyles = {
@@ -20,7 +21,7 @@ const useStyles = {
     },
 }
 
-export const ResearchItem: React.FC<ResearchItemProps> = ({documents, identifiers, onSelected, isDocumentAlreadyInLibrary}) => {
+export const ResearchItem: React.FC<ResearchItemProps> = ({documents, identifiers, onSelected, isDocumentAlreadyInLibrary, isRefreshing = false}) => {
     const [disabledCheckbox, setDisabledCheckbox] = React.useState(documents.length > 1);
     const [checked, setChecked] = React.useState(false);
 
@@ -63,6 +64,9 @@ export const ResearchItem: React.FC<ResearchItemProps> = ({documents, identifier
                         size="small"
                         variant="outlined"
                     />
+                )}
+                {isRefreshing && (
+                    <CircularProgress size={16} />
                 )}
             </Box>
             {documents.length === 1 ? (
