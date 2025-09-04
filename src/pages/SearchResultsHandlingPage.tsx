@@ -7,6 +7,7 @@ import {useBookStore} from '../stores/bookStore';
 import {LibraryDocumentInterface} from "../types";
 import {ResearchItem} from "../components/ResearchItem";
 import {HeaderContext} from '../stores/header';
+import {intersection} from 'lodash';
 
 
 const useStyles = {
@@ -41,7 +42,17 @@ export const SearchResultsHandlingPage: React.FC = () => {
     const researches = useSearchStore(state => state.researches);
     const removeResearch = useSearchStore(state => state.removeResearch);
     const addDocument = useBookStore(state => state.addDocument);
+    const documents = useBookStore(state => state.documents);
     const {setHeaderStyles, setToolbarStyles, setContent} = useContext(HeaderContext);
+
+    // Fonction pour vérifier si un document existe déjà dans le bookstore
+    const isDocumentAlreadyInLibrary = (document: LibraryDocumentInterface): boolean => {
+        const documentIdentifiers = document.getIdentifiers();
+        return documents.some(libraryDoc => {
+            const libraryIdentifiers = libraryDoc.getIdentifiers();
+            return intersection(documentIdentifiers, libraryIdentifiers).length > 0;
+        });
+    };
     useEffect(() => {
         setHeaderStyles(useStyles.appbar);
         setToolbarStyles(useStyles.toolbar);
@@ -113,7 +124,8 @@ export const SearchResultsHandlingPage: React.FC = () => {
                                 )}
                                 {status === ResearchStatus.Success &&
                                     <ResearchItem documents={documents} identifiers={identifiers}
-                                                  onSelected={selectDocument}/>
+                                                  onSelected={selectDocument}
+                                                  isDocumentAlreadyInLibrary={isDocumentAlreadyInLibrary}/>
                                 }
                             </Box>
                             <IconButton 

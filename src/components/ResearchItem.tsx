@@ -1,15 +1,16 @@
 import React, {ChangeEvent} from 'react';
 import {CompetingDocumentsInterface} from "../stores/searchStore";
-import {Box, Checkbox, Radio, RadioGroup} from "@mui/material";
+import {Box, Checkbox, Radio, RadioGroup, Chip} from "@mui/material";
 import {DocumentItem} from "./DocumentItem";
 import {LibraryDocumentInterface} from "../types";
 import {NotFoundItem} from "./research/NotFoundItem";
 
-interface ResearchItemProps {
-    documents: CompetingDocumentsInterface,
-    identifiers: Array<string>,
-    onSelected: (identifiers: Array<string>, document: LibraryDocumentInterface | null) => void
-}
+type ResearchItemProps = {
+    documents: CompetingDocumentsInterface;
+    identifiers: Array<string>;
+    onSelected: (identifiers: Array<string>, document: LibraryDocumentInterface | null) => void;
+    isDocumentAlreadyInLibrary: (document: LibraryDocumentInterface) => boolean;
+};
 
 const useStyles = {
     resultItem: {
@@ -19,11 +20,14 @@ const useStyles = {
     },
 }
 
-export const ResearchItem: React.FC<ResearchItemProps> = ({documents, identifiers, onSelected}) => {
+export const ResearchItem: React.FC<ResearchItemProps> = ({documents, identifiers, onSelected, isDocumentAlreadyInLibrary}) => {
     const [disabledCheckbox, setDisabledCheckbox] = React.useState(documents.length > 1);
     const [checked, setChecked] = React.useState(false);
 
     const [currentDocument, setCurrentDocument] = React.useState<LibraryDocumentInterface | null>(documents.length === 1 ? documents[0] : null);
+
+    // Vérifier si au moins un document de cette recherche existe déjà dans la bibliothèque
+    const hasDocumentInLibrary = documents.some(document => isDocumentAlreadyInLibrary(document));
 
     const selectDocument = ({target: {value}}: ChangeEvent<HTMLInputElement>) => {
         setCurrentDocument(documents[parseInt(value, 10)]);
@@ -50,7 +54,17 @@ export const ResearchItem: React.FC<ResearchItemProps> = ({documents, identifier
 
     return (
         <>
-            <Checkbox onChange={selectItem} disabled={disabledCheckbox} checked={checked}/>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Checkbox onChange={selectItem} disabled={disabledCheckbox} checked={checked}/>
+                {hasDocumentInLibrary && (
+                    <Chip 
+                        label="Déjà en bibliothèque" 
+                        color="success" 
+                        size="small"
+                        variant="outlined"
+                    />
+                )}
+            </Box>
             {documents.length === 1 ? (
                 <Box key={`${identifiers.join('-')}_0`}>
                     <DocumentItem document={documents[0]}/>
