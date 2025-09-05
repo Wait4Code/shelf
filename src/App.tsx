@@ -3,8 +3,8 @@ import React, {useEffect} from 'react';
 import {BrowserRouter, Route, Routes as RouterRoutes} from "react-router-dom";
 import {Homepage} from "./pages/Homepage";
 import {LoansPage} from "./pages/LoansPage";
-import {MobileSearchPage} from "./pages/MobileSearchPage";
-import {DesktopSearchPage} from "./pages/DesktopSearchPage";
+import {ScanPage} from "./pages/ScanPage";
+import {SearchPage} from "./pages/SearchPage";
 import {ShoppingCartPage} from "./pages/ShoppingCartPage";
 import {Routes} from "./utils/routes";
 import {useSearchStore} from "./stores/searchStore";
@@ -44,8 +44,8 @@ const App: React.FC = () => {
                     <Route path={''} element={<Layout/>}>
                         <Route path={Routes.home} Component={Homepage}/>
                         <Route path={Routes.library} Component={Homepage}/>
-                        <Route path={Routes.research} Component={DesktopSearchPage}/>
-                        <Route path={Routes.research_scan} Component={MobileSearchPage}/>
+                        <Route path={Routes.research} Component={SearchPage}/>
+                        <Route path={Routes.research_scan} Component={ScanPage}/>
                         <Route path={Routes.shoppingCart} Component={ShoppingCartPage}/>
                         <Route path={Routes.loans} Component={LoansPage}/>
                     </Route>

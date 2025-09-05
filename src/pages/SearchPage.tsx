@@ -1,4 +1,4 @@
-// src/pages/DesktopSearchPage.tsx
+// src/pages/SearchPage.tsx
 import React, {useContext, useEffect, useState} from 'react';
 import {Box, Typography, alpha, InputBase, SxProps, Theme, Button, List, ListItem, CircularProgress, IconButton} from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -78,7 +78,7 @@ const useStyles: Styles = {
     }
 };
 
-export const DesktopSearchPage: React.FC = () => {
+export const SearchPage: React.FC = () => {
     const [selectedDocuments, setSelectedDocuments] = useState<{ [k: string]: LibraryDocumentInterface }>({});
     const researches = useSearchStore(state => state.researches);
     const removeResearch = useSearchStore(state => state.removeResearch);

@@ -1,4 +1,4 @@
-// src/pages/MobileSearchPage.tsx
+// src/pages/ScanPage.tsx
 import React, {useContext, useEffect, useState} from 'react';
 import {alpha, Box, IconButton, InputBase, SxProps, Theme, Typography} from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
@@ -36,7 +36,7 @@ const useStyles: Styles = {
     }
 };
 
-export const MobileSearchPage: React.FC = () => {
+export const ScanPage: React.FC = () => {
     const [isSearching, setIsSearching] = useState(false);
     const {count: searchCount, addLibraryDocument} = useSearchStore();
     const {setHeaderStyles, setToolbarStyles, setContent} = useContext(HeaderContext);
