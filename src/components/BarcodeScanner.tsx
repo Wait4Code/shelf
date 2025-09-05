@@ -91,7 +91,7 @@ export const BarcodeScanner: React.FC = () => {
                 <Fab
                     sx={useStyles.managementButton}
                     color="primary"
-                    onClick={() => navigate(Routes.research_results)}
+                    onClick={() => navigate(Routes.research)}
                 >
                     <NavigateNext fontSize="large"/>
                 </Fab>

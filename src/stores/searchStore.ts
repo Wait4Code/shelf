@@ -207,7 +207,7 @@ export const useSearchStore = create<ResearchStore>()(
             onRehydrateStorage: () => (state) => {
                 if (state) {
                     state.researches = rehydrateDocuments(state.researches);
-                    
+                    console.log(state.researches);
                     // Rafraîchir automatiquement TOUTES les recherches pour avoir des données fraîches
                     state.researches.forEach(research => {
                         // Rafraîchir la recherche avec le premier identifiant
