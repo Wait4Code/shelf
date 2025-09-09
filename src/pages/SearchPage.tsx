@@ -98,6 +98,11 @@ export const SearchPage: React.FC = () => {
         });
     };
 
+    // Fonction pour vérifier s'il y a des refresh en cours
+    const researchesAreRefreshing = (): boolean => {
+        return researches.some(research => research.status === ResearchStatus.Pending);
+    };
+
     // Fonctions de gestion des documents sélectionnés
     const selectDocument = (identifiers: Array<string>, document: LibraryDocumentInterface | null) => {
         if (!document) {
@@ -219,6 +224,7 @@ export const SearchPage: React.FC = () => {
                                 <IconButton 
                                     color="error" 
                                     onClick={() => handleRemoveResearch(identifiers)}
+                                    disabled={status === ResearchStatus.Pending}
                                     aria-label="Supprimer cette recherche"
                                 >
                                     <DeleteIcon />
@@ -234,7 +240,7 @@ export const SearchPage: React.FC = () => {
                 variant="contained" 
                 color="primary" 
                 onClick={handleAddToLibrary}
-                disabled={Object.keys(selectedDocuments).length === 0}
+                disabled={Object.keys(selectedDocuments).length === 0 || researchesAreRefreshing()}
                 sx={useStyles.addButton}
                 size="large"
             >
