@@ -1,6 +1,7 @@
 // src/App.tsx
 import React, {useEffect} from 'react';
 import {BrowserRouter, Route, Routes as RouterRoutes} from "react-router-dom";
+import {SnackbarProvider} from 'notistack';
 import {Homepage} from "./pages/Homepage";
 import {LoansPage} from "./pages/LoansPage";
 import {ScanPage} from "./pages/ScanPage";
@@ -38,20 +39,22 @@ const App: React.FC = () => {
 
 
     return (
-        <HeaderProvider>
-            <BrowserRouter>
-                <RouterRoutes>
-                    <Route path={''} element={<Layout/>}>
-                        <Route path={Routes.home} Component={Homepage}/>
-                        <Route path={Routes.library} Component={Homepage}/>
-                        <Route path={Routes.research} Component={SearchPage}/>
-                        <Route path={Routes.research_scan} Component={ScanPage}/>
-                        <Route path={Routes.shoppingCart} Component={ShoppingCartPage}/>
-                        <Route path={Routes.loans} Component={LoansPage}/>
-                    </Route>
-                </RouterRoutes>
-            </BrowserRouter>
-        </HeaderProvider>
+        <SnackbarProvider maxSnack={3} anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}>
+            <HeaderProvider>
+                <BrowserRouter>
+                    <RouterRoutes>
+                        <Route path={''} element={<Layout/>}>
+                            <Route path={Routes.home} Component={Homepage}/>
+                            <Route path={Routes.library} Component={Homepage}/>
+                            <Route path={Routes.research} Component={SearchPage}/>
+                            <Route path={Routes.research_scan} Component={ScanPage}/>
+                            <Route path={Routes.shoppingCart} Component={ShoppingCartPage}/>
+                            <Route path={Routes.loans} Component={LoansPage}/>
+                        </Route>
+                    </RouterRoutes>
+                </BrowserRouter>
+            </HeaderProvider>
+        </SnackbarProvider>
     );
 };
 

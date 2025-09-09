@@ -2,6 +2,7 @@
 import React, {useContext, useEffect, useState} from 'react';
 import {Box, Typography, alpha, InputBase, SxProps, Theme, Button, List, ListItem, CircularProgress, IconButton} from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
+import {useSnackbar} from 'notistack';
 import {useSearchStore} from '../stores/searchStore';
 import {useBookStore} from '../stores/bookStore';
 import {LibraryDocument, LibraryDocumentInterface} from "../types";
@@ -86,6 +87,7 @@ export const SearchPage: React.FC = () => {
     const documents = useBookStore(state => state.documents);
     const {addLibraryDocument} = useSearchStore();
     const {setHeaderStyles, setToolbarStyles, setContent} = useContext(HeaderContext);
+    const {enqueueSnackbar} = useSnackbar();
 
     // Fonction pour vérifier si un document existe déjà dans le bookstore
     const isDocumentAlreadyInLibrary = (document: LibraryDocumentInterface): boolean => {
@@ -166,7 +168,12 @@ export const SearchPage: React.FC = () => {
                         if (!result) {
                             return;
                         }
-                        void addLibraryDocument(result);
+                        addLibraryDocument(result);
+                        enqueueSnackbar(`"${result.title}" ajouté à la liste de recherche`, { 
+                            variant: 'success',
+                            autoHideDuration: 3000,
+                            anchorOrigin: { vertical: 'bottom', horizontal: 'right' }
+                        });
                     }} 
                     containerStyles={useStyles.autocompleteContainer}
                     renderInput={params => {
