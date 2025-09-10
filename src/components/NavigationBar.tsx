@@ -7,7 +7,7 @@ import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import {matchPath, NavLink, useLocation} from 'react-router-dom';
 import {Routes} from '../utils/routes';
-import {useDeviceDetection} from '../hooks/useDeviceDetection';
+import {isMobile} from 'react-device-detect';
 
 
 function useRouteMatch(patterns: readonly string[]) {
@@ -24,7 +24,6 @@ function useRouteMatch(patterns: readonly string[]) {
 }
 
 export const NavigationBar: React.FC = () => {
-    const {isMobile} = useDeviceDetection();
     const routeMatch = useRouteMatch([Routes.research, Routes.research, Routes.shoppingCart, Routes.loans, Routes.home]);
     const currentTab = routeMatch?.pattern?.path;
     
