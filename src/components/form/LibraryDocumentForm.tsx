@@ -111,13 +111,14 @@ const LibraryDocumentSchema: ObjectSchema<Omit<LibraryDocumentInterface, "getIde
 export type LibraryDocumentFormProps = Readonly<{
     visibleFields?: string[]
     onSubmit?: (values: LibraryDocumentInterface) => void
+    initialValues?: Partial<LibraryDocumentInterface>
 }>;
 
 export interface LibraryDocumentFormRef {
     submitForm: () => void;
 }
 
-export const LibraryDocumentForm = React.forwardRef<LibraryDocumentFormRef, LibraryDocumentFormProps>(({ visibleFields, onSubmit }, ref) => {
+export const LibraryDocumentForm = React.forwardRef<LibraryDocumentFormRef, LibraryDocumentFormProps>(({ visibleFields, onSubmit, initialValues }, ref) => {
     let formikRef: FormikProps<any> | null = null;
 
     React.useImperativeHandle(ref, () => ({
@@ -145,7 +146,7 @@ export const LibraryDocumentForm = React.forwardRef<LibraryDocumentFormRef, Libr
 
     return (
         <Formik 
-            initialValues={new LibraryDocument('', DocumentType.Other)} 
+            initialValues={initialValues ? { ...new LibraryDocument('', DocumentType.Other), ...initialValues } : new LibraryDocument('', DocumentType.Other)} 
             onSubmit={(values, { setSubmitting }) => {
                 if (onSubmit) {
                     onSubmit(LibraryDocument.fromJson(LibraryDocumentSchema.cast(values)));

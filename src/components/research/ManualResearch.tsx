@@ -179,6 +179,7 @@ export const ManualResearch: React.FC<ManualResearchProps> = ({callback, contain
                             'europeanArticleNumbers', 'europeanArticleNumbers.number',
                         ]}
                         onSubmit={handleFormSubmit}
+                        initialValues={inputValue ? { title: inputValue } : undefined}
                         ref={formRef}
                     />
                 </DialogContent>
