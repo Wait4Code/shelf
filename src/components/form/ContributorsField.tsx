@@ -46,8 +46,10 @@ const ContributorItem: React.FC<{ baseName: string; onRemove: () => void; visibl
 }
 
 export default function ContributorsField({ name, visibleSubFields }: ContributorsFieldProps) {
-    const { values } = useFormikContext<Record<string, any>>();
+    const { values, errors, touched } = useFormikContext<Record<string, any>>();
     const current = (values as any)[name] as any[];
+    const fieldError = (errors as any)[name];
+    const fieldTouched = (touched as any)[name];
 
     return (
         <>
@@ -61,10 +63,15 @@ export default function ContributorsField({ name, visibleSubFields }: Contributo
                         <Button
                             variant="outlined"
                             type="button"
-                            onClick={() => push({ firstName: '', lastName: '', role: null, identifier: null })}
+                            onClick={() => push({ firstName: '', lastName: '', role: '', identifier: '' })}
                         >
                             Ajouter un contributeur
                         </Button>
+                        {fieldTouched && typeof fieldError === 'string' && fieldError && (
+                            <Typography variant="caption" color="error" sx={{ display: 'block', mt: 1 }}>
+                                {fieldError}
+                            </Typography>
+                        )}
                     </Box>
                 )}
             </FieldArray>
