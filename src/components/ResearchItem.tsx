@@ -1,16 +1,14 @@
-import React, {ChangeEvent} from 'react';
-import {CompetingDocumentsInterface} from "../stores/searchStore";
-import {Box, Checkbox, Radio, RadioGroup, Chip, CircularProgress} from "@mui/material";
-import {DocumentItem} from "./DocumentItem";
-import {LibraryDocumentInterface} from "../types";
-import {NotFoundItem} from "./research/NotFoundItem";
+import React, { ChangeEvent } from 'react';
+import { Box, Checkbox, Radio, RadioGroup, Chip, CircularProgress } from "@mui/material";
+import { DocumentItem } from "./DocumentItem";
+import { LibraryDocumentInterface } from "../types";
+import { NotFoundItem } from "./research/NotFoundItem";
+import { useSearchStore, ResearchStatus } from "../stores/searchStore";
+import { useBookStore } from '../stores/bookStore';
 
 type ResearchItemProps = {
-    documents: CompetingDocumentsInterface;
-    identifiers: Array<string>;
-    onSelected: (identifiers: Array<string>, document: LibraryDocumentInterface | null) => void;
-    isDocumentAlreadyInLibrary: (document: LibraryDocumentInterface) => boolean;
-    isRefreshing?: boolean;
+    researchId: string;
+    onSelected: (document: LibraryDocumentInterface | null) => void;
 };
 
 const useStyles = {
@@ -21,74 +19,76 @@ const useStyles = {
     },
 }
 
-export const ResearchItem: React.FC<ResearchItemProps> = ({documents, identifiers, onSelected, isDocumentAlreadyInLibrary, isRefreshing = false}) => {
-    const [disabledCheckbox, setDisabledCheckbox] = React.useState(documents.length > 1);
+export const ResearchItem: React.FC<ResearchItemProps> = ({ researchId, onSelected }) => {
+    const { researches: { [researchId]: research } } = useSearchStore();
+    const { hasSomeDocument: libraryHasSomeDocument } = useBookStore();
+
+    const [disabledCheckbox, setDisabledCheckbox] = React.useState(research.documents.length > 1);
     const [checked, setChecked] = React.useState(false);
+    const [currentDocument, setCurrentDocument] = React.useState<LibraryDocumentInterface | null>(research.documents.length === 1 ? research.documents[0] : null);
 
-    const [currentDocument, setCurrentDocument] = React.useState<LibraryDocumentInterface | null>(documents.length === 1 ? documents[0] : null);
-
-    // Vérifier si au moins un document de cette recherche existe déjà dans la bibliothèque
-    const hasDocumentInLibrary = documents.some(document => isDocumentAlreadyInLibrary(document));
-
-    const selectDocument = ({target: {value}}: ChangeEvent<HTMLInputElement>) => {
-        setCurrentDocument(documents[parseInt(value, 10)]);
+    const selectDocument = ({ target: { value } }: ChangeEvent<HTMLInputElement>) => {
+        setCurrentDocument(research.documents[parseInt(value, 10)]);
         setDisabledCheckbox(false);
         if (checked) {
-            onSelected(identifiers, documents[parseInt(value, 10)])
+            onSelected(research.documents[parseInt(value, 10)])
         }
     }
 
     const selectItem = () => {
         if (!checked) {
-            onSelected(identifiers, currentDocument)
+            onSelected(currentDocument)
             setChecked(true);
         } else {
-            onSelected(identifiers, null)
+            onSelected(null)
             setChecked(false)
         }
 
     }
 
-    if (documents.length === 0) {
-        return <NotFoundItem identifiers={identifiers}/>
+    if (research.documents.length === 0 && research.fromScan) {
+        return <NotFoundItem researchId={researchId} barcode={research.barcode} />
     }
 
     return (
         <>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <Checkbox onChange={selectItem} disabled={disabledCheckbox} checked={checked}/>
-                {hasDocumentInLibrary && (
-                    <Chip 
-                        label="Déjà en bibliothèque" 
-                        color="success" 
-                        size="small"
-                        variant="outlined"
-                    />
-                )}
-                {isRefreshing && (
+                <Checkbox onChange={selectItem} disabled={disabledCheckbox} checked={checked} />
+
+                {research.status === ResearchStatus.Pending && (
                     <CircularProgress size={16} />
                 )}
             </Box>
-            {documents.length === 1 ? (
-                <Box key={`${identifiers.join('-')}_0`}>
-                    <DocumentItem document={documents[0]}/>
+            {research.documents.length === 1 ? (
+                <Box key={research.id}>
+                    {libraryHasSomeDocument(research.documents[0]) && (
+                        <Chip
+                            label="Déjà en bibliothèque"
+                            color="success"
+                            size="small"
+                            variant="outlined"
+                        />
+                    )}
+                    <DocumentItem document={research.documents[0]} />
                 </Box>
             ) : (
                 <RadioGroup>
-                    {documents.map((document, index) => (
-                        <Box key={`${identifiers.join('-')}_${index}`}
-                             sx={useStyles.resultItem}>
-                            <Radio value={index} onChange={selectDocument}/>
-                            <DocumentItem document={document}/>
+                    {research.documents.map((document, index) => (
+                        <Box key={`${research.id}_${index}`} sx={useStyles.resultItem}>
+                            <Radio value={index} onChange={selectDocument} />
+                            {libraryHasSomeDocument(document, 'arkIdentifier') && (
+                                <Chip
+                                    label="Déjà en bibliothèque"
+                                    color="success"
+                                    size="small"
+                                    variant="outlined"
+                                />
+                            )}
+                            <DocumentItem document={document} />
                         </Box>
                     ))}
                 </RadioGroup>
-
-
             )}
-
         </>
-
-
     )
 }

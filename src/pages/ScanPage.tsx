@@ -1,13 +1,13 @@
 // src/pages/ScanPage.tsx
-import React, {useContext, useEffect, useState} from 'react';
-import {alpha, Box, IconButton, InputBase, SxProps, Theme, Typography} from '@mui/material';
+import React, { useContext, useEffect, useState } from 'react';
+import { alpha, Box, IconButton, InputBase, SxProps, Theme, Typography } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import CloseIcon from '@mui/icons-material/Close';
-import {useSearchStore} from '../stores/searchStore';
-import {LibraryDocument} from "../types";
-import {BarcodeScanner} from "../components/BarcodeScanner";
-import {HeaderContext} from "../stores/header";
-import {ManualResearch} from "../components/research/ManualResearch";
+import { useSearchStore } from '../stores/searchStore';
+import { LibraryDocument } from "../types";
+import { BarcodeScanner } from "../components/BarcodeScanner";
+import { HeaderContext } from "../stores/header";
+import { ManualResearch } from "../components/research/ManualResearch";
 
 
 type Styles = {
@@ -38,16 +38,16 @@ const useStyles: Styles = {
 
 export const ScanPage: React.FC = () => {
     const [isSearching, setIsSearching] = useState(false);
-    const {count: searchCount, addLibraryDocument} = useSearchStore();
-    const {setHeaderStyles, setToolbarStyles, setContent} = useContext(HeaderContext);
+    const { count: searchCount, addResearch } = useSearchStore();
+    const { setHeaderStyles, setToolbarStyles, setContent } = useContext(HeaderContext);
 
 
     useEffect(() => {
-        const pickResult = (result: LibraryDocument | null) => {
+        const pickResult = (result: LibraryDocument | null, fromBnf: boolean) => {
             if (!result) {
                 return;
             }
-            void addLibraryDocument(result);
+            void addResearch([result], fromBnf);
             setIsSearching(false);
         };
 
@@ -57,21 +57,21 @@ export const ScanPage: React.FC = () => {
         setContent(<>
             {isSearching ? (
                 <ManualResearch callback={pickResult} containerStyles={useStyles.autocompleteContainer}
-                                renderInput={params => {
-                                    const {InputProps: {ref}} = params;
-                                    const inputParams: Partial<typeof params> = params;
-                                    delete inputParams["InputLabelProps"]
-                                    delete inputParams["InputProps"]
+                    renderInput={params => {
+                        const { InputProps: { ref } } = params;
+                        const inputParams: Partial<typeof params> = params;
+                        delete inputParams["InputLabelProps"]
+                        delete inputParams["InputProps"]
 
-                                    return (
-                                        <div ref={ref}>
-                                            <InputBase
-                                                autoFocus
-                                                sx={useStyles.autocompleteInput}
-                                                placeholder="Rechercher un livre..." {...inputParams} />
-                                        </div>
-                                    );
-                                }}
+                        return (
+                            <div ref={ref}>
+                                <InputBase
+                                    autoFocus
+                                    sx={useStyles.autocompleteInput}
+                                    placeholder="Rechercher un livre..." {...inputParams} />
+                            </div>
+                        );
+                    }}
                 />
             ) : (
                 <Typography variant="h6">
@@ -79,7 +79,7 @@ export const ScanPage: React.FC = () => {
                 </Typography>
             )}
             <IconButton edge="end" color="inherit" onClick={() => setIsSearching(!isSearching)}>
-                {isSearching ? <CloseIcon/> : <SearchIcon/>}
+                {isSearching ? <CloseIcon /> : <SearchIcon />}
             </IconButton>
         </>)
 
@@ -88,12 +88,12 @@ export const ScanPage: React.FC = () => {
             setToolbarStyles({});
             setContent(<></>);
         };
-    }, [setHeaderStyles, setToolbarStyles, setContent, isSearching, searchCount, addLibraryDocument]);
+    }, [setHeaderStyles, setToolbarStyles, setContent, isSearching, searchCount, addResearch]);
 
 
     return (
         <Box>
-            <BarcodeScanner/>
+            <BarcodeScanner />
         </Box>
     );
 };

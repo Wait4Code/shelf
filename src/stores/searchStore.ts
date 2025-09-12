@@ -1,37 +1,10 @@
 // src/stores/searchStore.ts
-import {create} from 'zustand';
-import {persist} from 'zustand/middleware';
-import {LibraryDocumentInterface, LibraryDocument} from "../types";
-import {searchBNFDocument} from "../utils/libraryDocumentUtils";
-import {flatten, intersection} from "lodash";
-
-
-export enum ResearchStatus {
-    Error,
-    Pending,
-    Success,
-}
-
-
-interface LibraryDocumentResearch {
-    documents: CompetingDocuments
-    status: ResearchStatus,
-    identifiers: Array<string>,
-}
-
-interface ResearchStore {
-    researches: Array<LibraryDocumentResearch>
-    research: ResearchFunction,
-    refresh: ResearchFunction,
-    addLibraryDocument: AddLibraryDocumentFunction,
-    addDocumentsToResearch: addDocumentsToResearchFunction
-    clear: VoidFunction,
-    removeResearch: RemoveResearchFunction,
-    hasIdentifier: HasIdentifierFunction,
-    hasAnyIdentifier: HasAnyIdentifierFunction,
-    hasAnyIdentifierWithDocuments: HasAnyIdentifierFunction,
-    count: CountFunction
-}
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
+import { LibraryDocumentInterface, LibraryDocument } from "../types";
+import { searchBNFDocument } from "../utils/libraryDocumentUtils";
+import { intersection } from "lodash";
+import { v4 as uuidv4 } from 'uuid';
 
 export interface CompetingDocumentsInterface extends Array<LibraryDocumentInterface> {
     getDivergentKeys: () => Array<string>
@@ -69,170 +42,191 @@ class CompetingDocuments extends Array<LibraryDocumentInterface> implements Comp
     }
 }
 
+export enum ResearchStatus {
+    Error,
+    Pending,
+    Success,
+}
 
-type ResearchFunction = (barcode: string) => Promise<void>;
-type AddLibraryDocumentFunction = (document: LibraryDocumentInterface) => Promise<void>;
-type addDocumentsToResearchFunction = (identifiers: Array<string>, ...documents: LibraryDocumentInterface[]) => Promise<void>;
-type RemoveResearchFunction = (identifiers: Array<string>) => void;
-type HasIdentifierFunction = (identifier: string) => boolean;
-type HasAnyIdentifierFunction = (...identifiers: string[]) => boolean;
+
+type ScanFunction = (barcode: string) => Promise<void>;
+type BnfRefreshFunction = (id: string) => Promise<void>;
+type CompleteScanResearchFunction = (id: string, ...documents: LibraryDocumentInterface[]) => Promise<void>;
+type AddResearchFunction = (documents: Array<LibraryDocumentInterface>, fromBnf: boolean) => Promise<void>;
+type RemoveResearchFunction = (id: string) => void;
 type CountFunction = () => number;
+type BarcodeIsScannedFunction = (barcode: string) => boolean;
+type HasSomeResearchedDocumentFunction = (document: LibraryDocumentInterface) => boolean;
 
-// Fonction pour réhydrater les documents depuis le localStorage
-const rehydrateDocuments = (researches: Array<LibraryDocumentResearch>): Array<LibraryDocumentResearch> => {
-    return researches.map(research => ({
-        ...research,
-        documents: new CompetingDocuments(
-            ...research.documents.map(doc => LibraryDocument.fromJson(doc))
-        )
-    }));
-};
+
+interface Research {
+    id: string,
+    documents: CompetingDocuments
+    status: ResearchStatus,
+    fromScan: boolean,
+    fromBnf: boolean,
+}
+
+interface ManualResearch extends Research {
+    fromScan: false,
+}
+
+interface ScanResearch extends Research {
+    fromScan: true,
+    barcode: string,
+}
+
+interface ResearchStore {
+    researches: { [id: string]: ScanResearch | ManualResearch },
+    scan: ScanFunction,
+    bnfRefresh: BnfRefreshFunction,
+    completeScanResearch: CompleteScanResearchFunction,
+    addResearch: AddResearchFunction,
+    removeResearch: RemoveResearchFunction,
+    count: CountFunction,
+    barcodeIsScanned: BarcodeIsScannedFunction,
+    hasSomeResearchedDocument: HasSomeResearchedDocumentFunction,
+}
+
 
 export const useSearchStore = create<ResearchStore>()(
     persist(
         (set, get) => ({
-    researches: [],
-    research: async (barcode: string) => {
-        if (get().hasIdentifier(barcode)) {
-            return;
-        }
+            researches: {},
+            scan: async (barcode: string) => {
+                if (get().barcodeIsScanned(barcode)) {
+                    return;
+                }
 
-        const research: LibraryDocumentResearch = {
-            documents: new CompetingDocuments(),
-            status: ResearchStatus.Pending,
-            identifiers: [barcode]
-        }
+                const research: ScanResearch = { id: uuidv4(), documents: new CompetingDocuments(), status: ResearchStatus.Pending, fromScan: true, barcode: barcode, fromBnf: true };
 
-        set(state => ({researches: [...state.researches, research]}));
+                set(state => ({ researches: { ...state.researches, [research.id]: research } }));
 
-        try {
-            const documents = await searchBNFDocument(barcode);
-            set(addDocument(research.identifiers, documents))
-        } catch (error) {
-            set(state => {
-                const idx = state.researches.findIndex(item => research.identifiers === item.identifiers);
-                state.researches[idx].status = ResearchStatus.Error;
+                try {
+                    const documents = await searchBNFDocument(barcode);
 
-                console.warn(error);
-                return {researches: [...state.researches]};
-            });
-        }
+                    set(state => ({
+                        researches: {
+                            ...state.researches, [research.id]: {
+                                ...state.researches[research.id],
+                                status: ResearchStatus.Success,
+                                documents: new CompetingDocuments(...documents)
+                            }
+                        }
+                    }));
+                } catch (error) {
+                    console.warn(error);
+                    set(state => ({
+                        researches: {
+                            ...state.researches, [research.id]: {
+                                ...state.researches[research.id],
+                                status: ResearchStatus.Error,
+                            }
+                        }
+                    }));
+                }
+            },
+            bnfRefresh: async (id: string) => {
+                const research = get().researches[id];
+                if (!research?.fromBnf) {
+                    throw new Error(`Research ${id} does not exists or is not from BNF`);
+                }
 
+                set(state => ({
+                    researches: {
+                        ...state.researches, [id]: {
+                            ...state.researches[id],
+                            status: ResearchStatus.Pending,
+                        }
+                    }
+                }));
 
-    },
-    refresh: async (barcode: string) => {
-        // Trouver la recherche existante
-        const existingResearchIndex = get().researches.findIndex(research => research.identifiers.includes(barcode));
-        
-        if (existingResearchIndex === -1) {
-            // Si la recherche n'existe pas, utiliser la fonction research normale
-            return get().research(barcode);
-        }
-
-        // Mettre à jour le statut en Pending pour indiquer le refresh
-        set(state => {
-            const newResearches = [...state.researches];
-            newResearches[existingResearchIndex] = {
-                ...newResearches[existingResearchIndex],
-                status: ResearchStatus.Pending
-            };
-            return { researches: newResearches };
-        });
-
-        try {
-            const documents = await searchBNFDocument(barcode);
-            // Écraser les documents avec les nouvelles données
-            set(state => {
-                const newResearches = [...state.researches];
-                newResearches[existingResearchIndex] = {
-                    ...newResearches[existingResearchIndex],
-                    status: ResearchStatus.Success,
-                    documents: new CompetingDocuments(...documents)
-                };
-                return { researches: newResearches };
-            });
-        } catch (error) {
-            // En cas d'erreur, mettre à jour le statut en Error et vider les documents
-            set(state => {
-                const newResearches = [...state.researches];
-                newResearches[existingResearchIndex] = {
-                    ...newResearches[existingResearchIndex],
-                    status: ResearchStatus.Error,
-                    documents: new CompetingDocuments() // Vider les documents en cas d'erreur
-                };
-                return { researches: newResearches };
-            });
-            console.warn(error);
-        }
-    },
-    addLibraryDocument: async (document: LibraryDocumentInterface) => {
-        // on ajoute une nouvelle recherche
-        if (get().hasAnyIdentifier(...document.getIdentifiers())) {
-            return;
-        }
-
-        const research: LibraryDocumentResearch = {
-            documents: new CompetingDocuments(document),
-            status: ResearchStatus.Success,
-            identifiers: document.getIdentifiers(),
-        }
-
-        set(state => ({researches: [...state.researches, research]}));
-    },
-    addDocumentsToResearch: async (identifiers, ...documents) => {
-        // on ajoute des documents à une recherche existante
-        if (!get().hasAnyIdentifier(...identifiers)) {
-            return;
-        }
+                try {
+                    const documents = await searchBNFDocument(research.fromScan ? research.barcode : research.documents[0].getIdentifiers()[0]);
+                    set(state => ({
+                        researches: {
+                            ...state.researches, [id]: {
+                                ...state.researches[id],
+                                status: ResearchStatus.Success,
+                                documents: new CompetingDocuments(...documents)
+                            }
+                        }
+                    }));
+                } catch (error) {
+                    console.warn(error);
+                    set(state => ({
+                        researches: {
+                            ...state.researches, [id]: {
+                                ...state.researches[id],
+                                status: ResearchStatus.Error,
+                                documents: new CompetingDocuments()
+                            }
+                        }
+                    }));
+                }
 
 
-        set(addDocument(identifiers, documents))
-    },
-    clear: () => set({researches: []}),
-    removeResearch: (identifiers: Array<string>) => {
-        set(state => ({
-            researches: state.researches.filter(research => 
-                !research.identifiers.some(id => identifiers.includes(id))
-            )
-        }));
-    },
-    hasIdentifier: identifier => Boolean(get().researches.find(item => item.identifiers.includes(identifier))),
-    hasAnyIdentifier: (...identifiers) => Boolean(get().researches.find(item => intersection(item.identifiers, identifiers).length)),
-    hasAnyIdentifierWithDocuments: (...identifiers) => Boolean(get().researches.find(item => intersection(item.identifiers, identifiers).length && item.documents.length > 0)),
-    count: () => get().researches.length,
+
+            },
+            completeScanResearch: async (id: string, ...documents: LibraryDocumentInterface[]) => {
+                const research = get().researches[id];
+                if (!research?.fromScan) {
+                    throw new Error(`Research ${id} does not exists or is not from scan`);
+                }
+
+                set(state => ({
+                    researches: {
+                        ...state.researches, [id]: {
+                            ...state.researches[id],
+                            status: ResearchStatus.Success,
+                            documents: new CompetingDocuments(...documents)
+                        }
+                    }
+                }));
+
+
+            },
+            addResearch: async (documents: Array<LibraryDocumentInterface>, fromBnf: boolean) => {
+                const id = uuidv4();
+                set(state => ({
+                    researches: {
+                        ...state.researches, [id]: {
+                            id,
+                            status: ResearchStatus.Success,
+                            documents: new CompetingDocuments(...documents),
+                            fromScan: false,
+                            fromBnf,
+                        }
+                    }
+                }));
+            },
+            removeResearch: (id: string) => {
+                set(state => {
+                    const newResearches = { ...state.researches };
+                    delete newResearches[id];
+                    return { researches: newResearches };
+                });
+            },
+            count: () => Object.keys(get().researches).length,
+            barcodeIsScanned: (barcode: string) => Object.values(get().researches).some(research => research.fromScan && research.barcode === barcode),
+            hasSomeResearchedDocument: (document: LibraryDocumentInterface) => Object.values(get().researches).some(research => research.documents.some(researchedDocument => intersection(researchedDocument.getIdentifiers(), document.getIdentifiers()).length)),
         }),
         {
             name: 'search-store',
             partialize: (state) => ({ researches: state.researches }),
             onRehydrateStorage: () => (state) => {
                 if (state) {
-                    state.researches = rehydrateDocuments(state.researches);
-                    console.log(state.researches);
-                    // Rafraîchir automatiquement TOUTES les recherches pour avoir des données fraîches
-                    state.researches.forEach(research => {
-                        // Rafraîchir la recherche avec le premier identifiant
-                        const firstIdentifier = research.identifiers[0];
-                        if (firstIdentifier) {
-                            // Utiliser setTimeout pour éviter les problèmes de timing avec la réhydratation
+                    for (const id in state.researches) {
+                        state.researches[id].documents = new CompetingDocuments(...state.researches[id].documents.map(doc => LibraryDocument.fromJson(doc)));
+
+                        if (state.researches[id].fromBnf) {
                             setTimeout(() => {
-                                state.refresh(firstIdentifier);
+                                state.bnfRefresh(id);
                             }, 100);
                         }
-                    });
+                    }
                 }
             },
         }
-    )
-);
-
-const addDocument = (identifiers: Array<string>, documents: Array<LibraryDocumentInterface>) => (state: ResearchStore) => {
-    const idx = state.researches.findIndex(item => identifiers === item.identifiers);
-    state.researches[idx].status = ResearchStatus.Success;
-    state.researches[idx].documents = new CompetingDocuments(...documents);
-    state.researches[idx].identifiers = [
-        ...state.researches[idx].identifiers,
-        ...flatten(documents.map(document => document.getIdentifiers()))
-    ];
-
-    return {researches: [...state.researches]};
-}
+    ),
+)

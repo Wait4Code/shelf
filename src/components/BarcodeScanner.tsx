@@ -38,7 +38,7 @@ const useStyles = {
 
 export const BarcodeScanner: React.FC = () => {
     const navigate = useNavigate();
-    const {research, hasIdentifier, count} = useSearchStore();
+    const {scan, barcodeIsScanned, count} = useSearchStore();
     const [scanFeedback, setScanFeedback] = useState<string | null>(null);
     const scannerRef = useRef<Html5QrcodeScanner | null>(null);
     const html5QrcodeRef = useRef<Html5Qrcode | null>(null);
@@ -46,10 +46,10 @@ export const BarcodeScanner: React.FC = () => {
     useEffect(() => {
         const onScanSuccess: QrcodeSuccessCallback = decodedText => {
             let message = `Code-barres scanné : ${decodedText}`;
-            if (hasIdentifier(decodedText)) {
+            if (barcodeIsScanned(decodedText)) {
                 message += ' (déjà scanné !)';
             }
-            void research(decodedText);
+            void scan(decodedText);
             setScanFeedback(message);
         };
 
@@ -75,7 +75,7 @@ export const BarcodeScanner: React.FC = () => {
                 html5QrcodeRef.current.stop().then(() => html5QrcodeRef.current?.clear());
             }
         };
-    }, [research, hasIdentifier]);
+    }, [scan, barcodeIsScanned]);
 
     return (
         <Box sx={useStyles.container}>

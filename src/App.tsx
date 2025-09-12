@@ -13,29 +13,29 @@ import {Layout} from "./components/Layout";
 import {HeaderProvider} from './stores/header';
 
 const App: React.FC = () => {
-    const {research, addLibraryDocument} = useSearchStore();
+    const {scan} = useSearchStore();
 
     useEffect(() => {
-        void research('9782379331862'); // Barbarossa, 1941, la guerre absolue
-        void research('9782262105105'); // l'ours et le renard
-        void research('9782717866759');
-        void research('9782800108582');
-        void research('9782847347746');
-        void research('9782847347074');
-        void research('9782501117166');
-        void research('9782501104920');
-        void research('9782070457663'); // les décisions absurdes T1
-        void research('9782070456239'); // les décisions absurdes T2
-        void research('9782072729096'); // les décisions absurdes T3
-        void research('9791040400875'); // barbarossa 2eme edition
-        void research('9782709643740'); // inferno
-        void research('9798377302445'); // d.brief
-        void research('9791095598114'); // sortir de l'ombre - romans
-        void research('3781710305957'); // guerre & histoire - n1
-        void research('9782262068257'); // infographie
-        void research('9791033511960'); // carbone & silicium
-        void research('3782924705908'); // niépi - n1
-    }, [research, addLibraryDocument])
+        void scan('9782379331862'); // Barbarossa, 1941, la guerre absolue
+        void scan('9782262105105'); // l'ours et le renard
+        void scan('9782717866759');
+        void scan('9782800108582');
+        void scan('9782847347746');
+        void scan('9782847347074');
+        void scan('9782501117166');
+        void scan('9782501104920');
+        void scan('9782070457663'); // les décisions absurdes T1
+        void scan('9782070456239'); // les décisions absurdes T2
+        void scan('9782072729096'); // les décisions absurdes T3
+        void scan('9791040400875'); // barbarossa 2eme edition
+        void scan('9782709643740'); // inferno
+        void scan('9798377302445'); // d.brief
+        void scan('9791095598114'); // sortir de l'ombre - romans
+        void scan('3781710305957'); // guerre & histoire - n1
+        void scan('9782262068257'); // infographie
+        void scan('9791033511960'); // carbone & silicium
+        void scan('3782924705908'); // niépi - n1
+    }, [scan])
 
 
     return (

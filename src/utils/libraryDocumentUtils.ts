@@ -197,7 +197,7 @@ export const searchBNFDocument = async (query: string): Promise<LibraryDocumentI
         document.recordIdentifier = recordDatum.findControlField(dataField => dataField['mxc:controlfield'].tag === '001')?.["mxc:controlfield"].content.replace("FRBNF", '') as string;
         document.arkIdentifier = recordDatum.findControlField(dataField => dataField['mxc:controlfield'].tag === '003')?.["mxc:controlfield"].content.replace("http://catalogue.bnf.fr/",'') as string;
 
-        console.log(document)
+        // console.log(document)
         documents.push(document);
     });
     return documents;

@@ -16,16 +16,17 @@ import {useSearchStore} from "../../stores/searchStore";
 
 
 interface NotFoundItemProps {
-    identifiers: Array<string>
+    researchId: string;
+    barcode: string;
 }
 
-export const NotFoundItem: React.FC<NotFoundItemProps> = ({identifiers}) => {
+export const NotFoundItem: React.FC<NotFoundItemProps> = ({researchId, barcode}) => {
     const [open, setOpen] = React.useState(false);
     const [isInvalid, setIsInvalid] = React.useState(false);
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
     const [document, setDocument] = React.useState<LibraryDocumentInterface | null>(null);
-    const {addDocumentsToResearch, hasAnyIdentifierWithDocuments} = useSearchStore();
+    const {completeScanResearch, hasSomeResearchedDocument} = useSearchStore();
 
     const cancel = () => {
         selectDocument(null);
@@ -33,13 +34,12 @@ export const NotFoundItem: React.FC<NotFoundItemProps> = ({identifiers}) => {
     }
 
     const selectDocument = (selectedDocument: LibraryDocumentInterface | null) => {
-        console.log(selectedDocument,identifiers);
         setIsInvalid(false);
         setDocument(selectedDocument);
         if (!selectedDocument) {
             return;
         }
-        if (hasAnyIdentifierWithDocuments(...selectedDocument.getIdentifiers())) {
+        if (hasSomeResearchedDocument(selectedDocument)) {
             setIsInvalid(true);
         }
     }
@@ -47,14 +47,15 @@ export const NotFoundItem: React.FC<NotFoundItemProps> = ({identifiers}) => {
 
     const validateManualResearch = () => {
         if (document) {
-            void addDocumentsToResearch(identifiers, document);
+            console.log(document)
+            void completeScanResearch(researchId, document);
         }
         handleClose()
     }
 
     return <>
         <Typography>
-            Aucun document trouvé pour "<strong>{identifiers.join(', ')}</strong>"
+            Aucun document trouvé pour "<strong>{barcode}</strong>"
         </Typography>
         <Button onClick={handleOpen}>
             Rechercher

@@ -1,16 +1,15 @@
 // src/pages/SearchPage.tsx
-import React, {useContext, useEffect, useState} from 'react';
-import {Box, Typography, alpha, InputBase, SxProps, Theme, Button, List, ListItem, CircularProgress, IconButton} from '@mui/material';
+import React, { useContext, useEffect, useState } from 'react';
+import { Box, Typography, alpha, InputBase, SxProps, Theme, Button, List, ListItem, CircularProgress, IconButton } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
-import {useSnackbar} from 'notistack';
-import {useSearchStore} from '../stores/searchStore';
-import {useBookStore} from '../stores/bookStore';
-import {LibraryDocument, LibraryDocumentInterface} from "../types";
-import {HeaderContext} from "../stores/header";
-import {ManualResearch} from "../components/research/ManualResearch";
-import {ResearchItem} from "../components/ResearchItem";
-import {ResearchStatus} from "../stores/searchStore";
-import {intersection} from 'lodash';
+import { useSnackbar } from 'notistack';
+import { useSearchStore } from '../stores/searchStore';
+import { useBookStore } from '../stores/bookStore';
+import { LibraryDocument, LibraryDocumentInterface } from "../types";
+import { HeaderContext } from "../stores/header";
+import { ManualResearch } from "../components/research/ManualResearch";
+import { ResearchItem } from "../components/ResearchItem";
+import { ResearchStatus } from "../stores/searchStore";
 
 type Styles = {
     [key: string]: SxProps<Theme>
@@ -30,7 +29,7 @@ const useStyles: Styles = {
         padding: 4,
         minHeight: '100vh',
     },
-    headerTitleContainer:{
+    headerTitleContainer: {
         position: 'absolute',
         left: '50%',
         transform: 'translateX(-50%)',
@@ -81,41 +80,30 @@ const useStyles: Styles = {
 
 export const SearchPage: React.FC = () => {
     const [selectedDocuments, setSelectedDocuments] = useState<{ [k: string]: LibraryDocumentInterface }>({});
-    const researches = useSearchStore(state => state.researches);
-    const removeResearch = useSearchStore(state => state.removeResearch);
     const addDocument = useBookStore(state => state.addDocument);
-    const documents = useBookStore(state => state.documents);
-    const {addLibraryDocument} = useSearchStore();
-    const {setHeaderStyles, setToolbarStyles, setContent} = useContext(HeaderContext);
-    const {enqueueSnackbar} = useSnackbar();
-
-    // Fonction pour vérifier si un document existe déjà dans le bookstore
-    const isDocumentAlreadyInLibrary = (document: LibraryDocumentInterface): boolean => {
-        const documentIdentifiers = document.getIdentifiers();
-        return documents.some(libraryDoc => {
-            const libraryIdentifiers = libraryDoc.getIdentifiers();
-            return intersection(documentIdentifiers, libraryIdentifiers).length > 0;
-        });
-    };
+    const researches = useSearchStore(state => state.researches);    
+    const { addResearch, removeResearch, count: researchCount } = useSearchStore();
+    const { setHeaderStyles, setToolbarStyles, setContent } = useContext(HeaderContext);
+    const { enqueueSnackbar } = useSnackbar();
 
     // Fonction pour vérifier s'il y a des refresh en cours
     const researchesAreRefreshing = (): boolean => {
-        return researches.some(research => research.status === ResearchStatus.Pending);
+        return Object.values(researches).some(research => research.status === ResearchStatus.Pending);
     };
 
     // Fonctions de gestion des documents sélectionnés
-    const selectDocument = (identifiers: Array<string>, document: LibraryDocumentInterface | null) => {
+    const selectDocument = (id: string, document: LibraryDocumentInterface | null) => {
         if (!document) {
-            delete selectedDocuments[identifiers.join('-')];
-            setSelectedDocuments({...selectedDocuments});
+            delete selectedDocuments[id];
+            setSelectedDocuments({ ...selectedDocuments });
         } else {
-            setSelectedDocuments({...selectedDocuments, [identifiers.join('-')]: document});
+            setSelectedDocuments({ ...selectedDocuments, [id]: document });
         }
     };
 
     const handleAddToLibrary = () => {
         const selectedDocs = Object.values(selectedDocuments);
-        
+
         if (selectedDocs.length === 0) {
             return; // Aucun document sélectionné
         }
@@ -126,23 +114,21 @@ export const SearchPage: React.FC = () => {
         });
 
         // Grouper les identifiants par recherche pour les supprimer correctement
-        const researchKeys = Object.keys(selectedDocuments);
-        researchKeys.forEach(key => {
-            const identifiers = key.split('-');
-            removeResearch(identifiers);
+        const researchIds = Object.keys(selectedDocuments);
+        researchIds.forEach(id => {
+            removeResearch(id);
         });
 
         // Vider la sélection
         setSelectedDocuments({});
     };
 
-    const handleRemoveResearch = (identifiers: Array<string>) => {
-        removeResearch(identifiers);
+    const handleRemoveResearch = (researchId: string) => {
+        removeResearch(researchId);
         // Supprimer aussi de la sélection si elle était sélectionnée
-        const key = identifiers.join('-');
-        if (selectedDocuments[key]) {
-            delete selectedDocuments[key];
-            setSelectedDocuments({...selectedDocuments});
+        if (selectedDocuments[researchId]) {
+            delete selectedDocuments[researchId];
+            setSelectedDocuments({ ...selectedDocuments });
         }
     };
 
@@ -168,21 +154,21 @@ export const SearchPage: React.FC = () => {
     return (
         <Box sx={useStyles.container}>
             <Box sx={useStyles.searchContainer}>
-                <ManualResearch 
-                    callback={(result: LibraryDocument | null) => {
+                <ManualResearch
+                    callback={(result: LibraryDocument | null, fromBnf: boolean) => {
                         if (!result) {
                             return;
                         }
-                        addLibraryDocument(result);
-                        enqueueSnackbar(`"${result.title}" ajouté à la liste de recherche`, { 
+                        addResearch([result], fromBnf);
+                        enqueueSnackbar(`"${result.title}" ajouté à la liste de recherche`, {
                             variant: 'success',
                             autoHideDuration: 3000,
                             anchorOrigin: { vertical: 'bottom', horizontal: 'right' }
                         });
-                    }} 
+                    }}
                     containerStyles={useStyles.autocompleteContainer}
                     renderInput={params => {
-                        const {InputProps: {ref}} = params;
+                        const { InputProps: { ref } } = params;
                         const inputParams: Partial<typeof params> = params;
                         delete inputParams["InputLabelProps"]
                         delete inputParams["InputProps"]
@@ -200,30 +186,27 @@ export const SearchPage: React.FC = () => {
             </Box>
 
             {/* Affichage des résultats de recherche */}
-            {researches.length > 0 && (
+            {researchCount() > 0 && (
                 <Box sx={useStyles.resultsContainer}>
                     <Typography variant="h5" sx={{ mb: 3, textAlign: 'center' }}>
-                        Résultats de recherche ({researches.length})
+                        Résultats de recherche ({researchCount()})
                     </Typography>
-                    
+
                     <List>
-                        {researches.map(({documents, status, identifiers}) => (
-                            <ListItem key={identifiers.join('-')} sx={useStyles.listItem}>
+                        {Object.values(researches).map(({ documents, status, id }) => (
+                            <ListItem key={id} sx={useStyles.listItem}>
                                 <Box sx={useStyles.researchContent}>
-                                    {status === ResearchStatus.Pending && documents.length === 0 && <CircularProgress/>}
+                                    {status === ResearchStatus.Pending && documents.length === 0 && <CircularProgress />}
                                     {status === ResearchStatus.Error && (
                                         <Typography color="error">Erreur lors de la recherche</Typography>
                                     )}
                                     {(status === ResearchStatus.Success || (status === ResearchStatus.Pending && documents.length > 0)) &&
-                                        <ResearchItem documents={documents} identifiers={identifiers}
-                                                      onSelected={selectDocument}
-                                                      isDocumentAlreadyInLibrary={isDocumentAlreadyInLibrary}
-                                                      isRefreshing={status === ResearchStatus.Pending && documents.length > 0}/>
+                                        <ResearchItem researchId={id} onSelected={(document) => selectDocument(id, document)} />
                                     }
                                 </Box>
-                                <IconButton 
-                                    color="error" 
-                                    onClick={() => handleRemoveResearch(identifiers)}
+                                <IconButton
+                                    color="error"
+                                    onClick={() => handleRemoveResearch(id)}
                                     disabled={status === ResearchStatus.Pending}
                                     aria-label="Supprimer cette recherche"
                                 >
@@ -236,9 +219,9 @@ export const SearchPage: React.FC = () => {
             )}
 
             {/* Bouton pour ajouter à la bibliothèque - toujours visible */}
-            <Button 
-                variant="contained" 
-                color="primary" 
+            <Button
+                variant="contained"
+                color="primary"
                 onClick={handleAddToLibrary}
                 disabled={Object.keys(selectedDocuments).length === 0 || researchesAreRefreshing()}
                 sx={useStyles.addButton}

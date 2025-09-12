@@ -28,7 +28,7 @@ class CreatableOption {
 }
 
 interface ManualResearchProps {
-    callback: (value: LibraryDocumentInterface | null) => void;
+    callback: (value: LibraryDocumentInterface | null, fromBnf: boolean) => void;
     containerStyles?: SxProps<Theme>;
     renderInput: AutocompleteProps<never, never, never, never, never>['renderInput'];
 }
@@ -52,7 +52,7 @@ export const ManualResearch: React.FC<ManualResearchProps> = ({callback, contain
         setValue(formValues);
 
         // Appeler le callback avec les valeurs du formulaire
-        callback(formValues);
+        callback(formValues, false);
         handleClose();
     }
 
@@ -139,7 +139,7 @@ export const ManualResearch: React.FC<ManualResearchProps> = ({callback, contain
 
                     setOptions(newValue ? [newValue, ...options] : options);
                     setValue(newValue);
-                    callback(newValue);
+                    callback(newValue, true);
                 }}
                 onInputChange={(_event, newInputValue) => {
                     setInputValue(newInputValue);
@@ -179,7 +179,7 @@ export const ManualResearch: React.FC<ManualResearchProps> = ({callback, contain
                             'europeanArticleNumbers', 'europeanArticleNumbers.number',
                         ]}
                         onSubmit={handleFormSubmit}
-                        initialValues={inputValue ? { title: inputValue } : undefined}
+                        initialValues={inputValue ? { title: inputValue } : {}}
                         ref={formRef}
                     />
                 </DialogContent>
