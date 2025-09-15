@@ -2,18 +2,82 @@
 import React, {useEffect} from 'react';
 import {BrowserRouter, Route, Routes as RouterRoutes} from "react-router-dom";
 import {SnackbarProvider} from 'notistack';
+import {QueryClient, QueryClientProvider} from '@tanstack/react-query';
+// import {ReactQueryDevtools} from '@tanstack/react-query-devtools';
 import {Homepage} from "./pages/Homepage";
 import {LoansPage} from "./pages/LoansPage";
 import {ScanPage} from "./pages/ScanPage";
 import {SearchPage} from "./pages/SearchPage";
 import {ShoppingCartPage} from "./pages/ShoppingCartPage";
 import {Routes} from "./utils/routes";
-import {useSearchStore} from "./stores/searchStore";
+import {useSearchStore, setSyncService} from "./stores/searchStore";
 import {Layout} from "./components/Layout";
 import {HeaderProvider} from './stores/header';
+import {useCreateResearchedItem, useUpdateResearchedItem, useDeleteResearchedItem} from './hooks/useResearchedItems';
+import {useAutoSync} from './hooks/useAutoSync';
 
-const App: React.FC = () => {
+// Configuration du client React Query
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 5 * 60 * 1000, // 5 minutes
+      gcTime: 10 * 60 * 1000, // 10 minutes (anciennement cacheTime)
+      retry: (failureCount, error: any) => {
+        if (error?.response?.status >= 400 && error?.response?.status < 500) {
+          return false;
+        }
+        return failureCount < 3;
+      },
+      refetchOnWindowFocus: false,
+      refetchOnReconnect: true,
+    },
+    mutations: {
+      retry: (failureCount, error: any) => {
+        if (error?.response?.status >= 400 && error?.response?.status < 500) {
+          return false;
+        }
+        return failureCount < 1;
+      },
+    },
+  },
+});
+
+// Composant interne pour gérer la synchronisation
+const AppContent: React.FC = () => {
     const {scan} = useSearchStore();
+    const createMutation = useCreateResearchedItem();
+    const updateMutation = useUpdateResearchedItem();
+    const deleteMutation = useDeleteResearchedItem();
+
+    // Configuration de la synchronisation automatique
+    useAutoSync({
+        interval: 30000, // 30 secondes
+        syncOnMount: true,
+        syncOnFocus: true,
+        syncOnOnline: true,
+    });
+
+    // Injection des services React Query dans le store Zustand
+    useEffect(() => {
+        setSyncService({
+            createResearch: async (data) => {
+                const result = await createMutation.mutateAsync(data);
+                return result;
+            },
+            updateResearch: async (id, data) => {
+                const result = await updateMutation.mutateAsync({ id, data });
+                return result;
+            },
+            deleteResearch: async (id) => {
+                await deleteMutation.mutateAsync(id);
+            },
+        });
+
+        // Cleanup - retirer le service lors du démontage
+        return () => {
+            setSyncService(null);
+        };
+    }, [createMutation, updateMutation, deleteMutation]);
 
     useEffect(() => {
         void scan('9782379331862'); // Barbarossa, 1941, la guerre absolue
@@ -37,7 +101,6 @@ const App: React.FC = () => {
         void scan('3782924705908'); // niépi - n1
     }, [scan])
 
-
     return (
         <SnackbarProvider maxSnack={3} anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}>
             <HeaderProvider>
@@ -55,6 +118,18 @@ const App: React.FC = () => {
                 </BrowserRouter>
             </HeaderProvider>
         </SnackbarProvider>
+    );
+};
+
+const App: React.FC = () => {
+    return (
+        <QueryClientProvider client={queryClient}>
+            <AppContent />
+            {/* Devtools React Query (uniquement en développement) */}
+            {/* {process.env.NODE_ENV === 'development' && (
+                <ReactQueryDevtools initialIsOpen={false} />
+            )} */}
+        </QueryClientProvider>
     );
 };
 
